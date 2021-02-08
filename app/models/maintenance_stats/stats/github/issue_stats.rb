@@ -47,11 +47,11 @@ module MaintenanceStats
         end
 
         def closed_pull_request_count
-          @closed_pull_request_count ||= @results.original_hash.dig("data", "repository", "closedPullRequests", "totalCount") || 0
+          @closed_pull_request_count ||= @results.original_hash.dig("data", "closedPullRequests", "issueCount") || 0
         end
 
         def open_pull_request_count
-          @open_pull_request_count ||= @results.original_hash.dig("data", "repository", "openPullRequests", "totalCount") || 0
+          @open_pull_request_count ||= @results.original_hash.dig("data", "openPullRequests", "issueCount") || 0
         end
 
         def pull_request_closure_rate
