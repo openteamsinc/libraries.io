@@ -34,6 +34,8 @@ class PackageManagerDownloadWorker
     maven_hortonworks: PackageManager::Maven::Hortonworks,
     maven_mavencentral: PackageManager::Maven::MavenCentral,
     maven_springlibs: PackageManager::Maven::SpringLibs,
+    maven_jboss: PackageManager::Maven::Jboss,
+    maven_jbossea: PackageManager::Maven::JbossEa,
     meteor: PackageManager::Meteor,
     nimble: PackageManager::Nimble,
     npm: PackageManager::NPM,
@@ -54,16 +56,17 @@ class PackageManagerDownloadWorker
 
   def perform(platform_name, name, version = nil)
     key = begin
-            platform_name
-              .gsub(/PackageManager::/, "")
-              .gsub(/::/, "_")
-              .downcase
-              .to_sym
-          rescue StandardError
-            nil
-          end
+      platform_name
+        .gsub(/PackageManager::/, "")
+        .gsub(/::/, "_")
+        .downcase
+        .to_sym
+    rescue StandardError
+      nil
+    end
 
     platform = PLATFORMS[key]
+    name = name.to_s.strip
     version = version.to_s.strip
     raise "Platform '#{platform_name}' not found" unless platform
 

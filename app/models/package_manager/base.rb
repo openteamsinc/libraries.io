@@ -89,7 +89,7 @@ module PackageManager
 
     def self.update(name, sync_version: :all)
       if sync_version != :all && !self::SUPPORTS_SINGLE_VERSION_UPDATE
-        logger.warn("#{db_platform}.update(#{name}, sync_version: #{sync_version}) called but not supported on platform")
+        Rails.logger.warn("#{db_platform}.update(#{name}, sync_version: #{sync_version}) called but not supported on platform")
         return
       end
 
@@ -128,6 +128,8 @@ module PackageManager
     end
 
     def self.add_version(db_project, version_hash)
+      return if version_hash.blank?
+
       # Protect version against stray data
       version_hash = version_hash.symbolize_keys.slice(
         :number,
