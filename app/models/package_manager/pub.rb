@@ -41,18 +41,18 @@ module PackageManager
       get("https://pub.dartlang.org/api/packages/#{name}")
     end
 
-    def self.mapping(project)
-      latest_version = project["versions"].last
+    def self.mapping(raw_project)
+      latest_version = raw_project["versions"].last
       {
-        name: project["name"],
+        name: raw_project["name"],
         homepage: latest_version["pubspec"]["homepage"],
         description: latest_version["pubspec"]["description"],
         repository_url: repo_fallback("", latest_version["pubspec"]["homepage"]),
       }
     end
 
-    def self.versions(project, _name)
-      project["versions"].map do |v|
+    def self.versions(raw_project, _name)
+      raw_project["versions"].map do |v|
         {
           number: v["version"],
         }

@@ -26,8 +26,8 @@ module PackageManager
       get_json("#{API_URL}/packages")
     end
 
-    def self.one_version(name, version_string)
-      get_json("#{API_URL}/#{self::REPOSITORY_SOURCE_NAME}/#{name}/#{version_string}")&.first
+    def self.one_version(raw_project, version_string)
+      get_json("#{API_URL}/#{self::REPOSITORY_SOURCE_NAME}/#{raw_project["name"]}/#{version_string}")&.first
     end
 
     def self.project(name)
@@ -88,13 +88,13 @@ module PackageManager
       "#{API_URL}/package/#{project.name}"
     end
 
-    def self.mapping(project)
+    def self.mapping(raw_project)
       # TODO: can we make this more explicit?
-      project.deep_symbolize_keys
+      raw_project.deep_symbolize_keys
     end
 
-    def self.versions(project, _name)
-      project["versions"].map { |version| version.deep_symbolize_keys.slice(:number, :original_license, :published_at) }
+    def self.versions(raw_project, _name)
+      raw_project["versions"].map { |version| version.deep_symbolize_keys.slice(:number, :original_license, :published_at) }
     end
 
     def self.dependencies(name, version, _mapped_project)

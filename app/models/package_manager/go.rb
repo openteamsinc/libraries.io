@@ -54,8 +54,8 @@ module PackageManager
         .map { |line| JSON.parse(line)["Path"] }
     end
 
-    def self.one_version(name, version_string)
-      info = get("#{PROXY_BASE_URL}/#{name}/@v/#{version_string}.info")
+    def self.one_version(raw_project, version_string)
+      info = get("#{PROXY_BASE_URL}/#{raw_project[:name]}/@v/#{version_string}.info")
 
       # Store nil published_at for known Go Modules issue where case-insensitive name collisions break go get
       # e.g. https://proxy.golang.org/github.com/ysweid/aws-sdk-go/@v/v1.12.68.info
@@ -67,17 +67,19 @@ module PackageManager
       }
 
       # Supplement with license info from pkg.go.dev
-      doc_html = get_html("#{DISCOVER_URL}/#{name}")
+      doc_html = get_html("#{DISCOVER_URL}/#{raw_project[:name]}")
       data[:original_license] = doc_html.css('*[data-test-id="UnitHeader-license"]').map(&:text).join(",")
 
       data
     end
 
     def self.update(name, sync_version: :all)
-      super(name, sync_version: sync_version)
+      project = super(name, sync_version: sync_version)
       # call update on base module name if the name is appended with major version
       # example: github.com/myexample/modulename/v2
       update_base_module(name) if name.match(VERSION_MODULE_REGEX)
+
+      project
     end
 
     def self.update_base_module(name)
@@ -105,17 +107,16 @@ module PackageManager
       end
     end
 
-    def self.versions(project, _name)
-      return [] if project.nil?
-      return project[:versions] if project[:versions]
+    def self.versions(raw_project, _name)
+      return [] if raw_project.nil?
+      return raw_project[:versions] if raw_project[:versions]
 
-      known_versions = Project.find_by(platform: "Go", name: project[:name])&.versions&.select(:number, :created_at, :published_at, :updated_at, :original_license)&.index_by(&:number) || {}
+      known_versions = Project.find_by(platform: "Go", name: raw_project[:name])&.versions&.select(:number, :created_at, :published_at, :updated_at, :original_license)&.index_by(&:number) || {}
 
       # NB fetching versions from the html only gets dates without timestamps, but we could alternatively use the go proxy too:
       #   1) Fetch the list of versions: https://proxy.golang.org/#{module_name}/@v/list
       #   2) And for each version, fetch https://proxy.golang.org/#{module_name}/@v/#{v}.info
-
-      get_raw("#{PROXY_BASE_URL}/#{project[:name]}/@v/list")
+      get_raw("#{PROXY_BASE_URL}/#{raw_project[:name]}/@v/list")
         &.lines
         &.map(&:strip)
         &.reject(&:blank?)
@@ -125,7 +126,7 @@ module PackageManager
           if known && known[:original_license].present?
             known.slice(:number, :created_at, :published_at, :original_license)
           else
-            one_version(project[:name], v)
+            one_version(raw_project, v)
           end
       rescue Oj::ParseError
         next
@@ -133,19 +134,19 @@ module PackageManager
         &.compact
     end
 
-    def self.mapping(project)
-      if project[:html]
-        url = project[:overview_html]&.css(".UnitMeta-repo a")&.first&.attribute("href")&.value
+    def self.mapping(raw_project)
+      if raw_project[:html]
+        url = raw_project[:overview_html]&.css(".UnitMeta-repo a")&.first&.attribute("href")&.value
 
         {
-          name: project[:name],
-          description: project[:html].css(".Documentation-overview p").map(&:text).join("\n").strip,
-          licenses: project[:html].css('*[data-test-id="UnitHeader-license"]').map(&:text).join(","),
+          name: raw_project[:name],
+          description: raw_project[:html].css(".Documentation-overview p").map(&:text).join("\n").strip,
+          licenses: raw_project[:html].css('*[data-test-id="UnitHeader-license"]').map(&:text).join(","),
           repository_url: url,
           homepage: url,
         }
       else
-        { name: project[:name] }
+        { name: raw_project[:name] }
       end
     end
 
