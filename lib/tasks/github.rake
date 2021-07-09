@@ -27,6 +27,14 @@ namespace :github do
     Repository.source.not_removed.open_source.where(rank: nil).order('repositories.stargazers_count DESC').limit(500).select('id').each(&:update_source_rank_async)
   end
 
+  desc 'Update repositories stargazers counters'
+  task update_stargazers_counters: :environment do
+    exit if ENV['READ_ONLY'].present?
+    Repository.host('Github').pluck(:full_name).each do |repo_name|
+      RepositoryUpdateStargazersCountWorker.perform_async(repo_name)
+    end
+  end
+
   desc 'Sync github issues'
   task sync_issues: :environment do
     exit if ENV['READ_ONLY'].present?

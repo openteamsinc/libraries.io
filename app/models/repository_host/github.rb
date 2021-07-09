@@ -154,6 +154,10 @@ module RepositoryHost
       api_client(token).commits(repository.full_name)
     end
 
+    def retrieve_stargazers_count(token = nil)
+      api_client(token).repository(repository.full_name).stargazers_count
+    end
+
     def download_owner
       return if repository.owner && repository.repository_user_id && repository.owner.login == repository.owner_name
       o = api_client.user(repository.owner_name)
