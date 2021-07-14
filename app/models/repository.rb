@@ -296,6 +296,13 @@ class Repository < ApplicationRecord
     end
   end
 
+  def self.update_stargazers_count(repo_name)
+    repository = Repository.host('GitHub').find_by_full_name(repo_name)
+    return unless repository
+    stargazers_count = repository.repository_host.retrieve_stargazers_count
+    repository.update(stargazers_count: stargazers_count)
+  end
+
   def self.update_from_star(repo_name)
     repository = Repository.host('GitHub').find_by_full_name(repo_name)
     if repository
