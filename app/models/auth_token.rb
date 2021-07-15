@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 class AuthToken < ApplicationRecord
+  class RateLimitExceeded < StandardError; end
+
   validates_presence_of :token
   scope :authorized, -> { where(authorized: [true, nil]) }
+  scope :without_rate_limit_reset_at, -> { where(rate_limit_reset_at: nil) }
+  scope :resetted_rate_limit, -> { where('rate_limit_reset_at < ?', DateTime.now) }
 
   def self.client(options = {})
     find_token(:v3).github_client(options)
@@ -22,9 +26,8 @@ class AuthToken < ApplicationRecord
   end
 
   def high_rate_limit?(api_version)
-    if api_version == :v4
-      return v4_remaining_rate > 500
-    end
+    return v4_remaining_rate > 500 if api_version == :v4
+
     github_client.rate_limit.remaining > 500
     rescue Octokit::Unauthorized, Octokit::AccountSuspended
       false
@@ -73,11 +76,23 @@ class AuthToken < ApplicationRecord
 
   def self.find_token(api_version)
     return @auth_token if @auth_token && @auth_token.high_rate_limit?(api_version)
-    auth_token = authorized.order(Arel.sql("RANDOM()")).limit(100).sample
+
+    @auth_token = nil
+    auth_token = authorized
+                   .without_rate_limit_reset_at
+                   .or(authorized.resetted_rate_limit)
+                   .order(Arel.sql("RANDOM()")).limit(100).sample
+    raise AuthToken::RateLimitExceeded if auth_token.nil?
+ 
     if auth_token.high_rate_limit?(api_version)
       @auth_token = auth_token
+      auth_token.update(rate_limit_reset_at: nil) unless auth_token.rate_limit_reset_at.nil?
+      @auth_token
+    else
+      reset_time = DateTime.now + AuthToken.new_client(auth_token).rate_limit.resets_in.seconds
+      auth_token.update(rate_limit_reset_at: reset_time)
+      find_token(api_version)
     end
-    find_token(api_version)
   end
 
   def v4_remaining_rate
