@@ -2,10 +2,15 @@
 class AuthToken < ApplicationRecord
   class RateLimitExceeded < StandardError; end
 
+  API_REQUESTS_RATE_PER_TOKEN = 0.5
+
   validates_presence_of :token
   scope :authorized, -> { where(authorized: [true, nil]) }
   scope :without_rate_limit_reset_at, -> { where(rate_limit_reset_at: nil) }
   scope :resetted_rate_limit, -> { where('rate_limit_reset_at < ?', DateTime.now) }
+
+  @@auth_tokens = []
+  @token_mutex = Mutex.new
 
   def self.client(options = {})
     find_token(:v3).github_client(options)
@@ -71,27 +76,33 @@ class AuthToken < ApplicationRecord
     # create new client with HTTP adapter set to use token and the loaded GraphQL schema
     GraphQL::Client.new(schema: Rails.application.config.graphql.schema, execute: http_adapter)
   end
-
   private
 
-  def self.find_token(api_version)
-    return @auth_token if @auth_token && @auth_token.high_rate_limit?(api_version)
+  def self.available_tokens
+    authorized
+      .without_rate_limit_reset_at
+      .or(authorized.resetted_rate_limit)
+      .limit(100)
+      .to_a
+  end
 
-    @auth_token = nil
-    auth_token = authorized
-                   .without_rate_limit_reset_at
-                   .or(authorized.resetted_rate_limit)
-                   .order(Arel.sql("RANDOM()")).limit(100).sample
-    raise AuthToken::RateLimitExceeded if auth_token.nil?
- 
-    if auth_token.high_rate_limit?(api_version)
-      @auth_token = auth_token
-      auth_token.update(rate_limit_reset_at: nil) unless auth_token.rate_limit_reset_at.nil?
-      @auth_token
-    else
-      reset_time = DateTime.now + AuthToken.new_client(auth_token).rate_limit.resets_in.seconds
-      auth_token.update(rate_limit_reset_at: reset_time)
-      find_token(api_version)
+  def self.find_token(api_version)
+    @token_mutex.synchronize do
+      loop do
+        @@auth_tokens = available_tokens if @@auth_tokens.empty?
+        number_of_available_tokens = @@auth_tokens.size
+        raise AuthToken::RateLimitExceeded if number_of_available_tokens.eql? 0
+
+        auth_token = @@auth_tokens.pop
+        if auth_token.high_rate_limit?(api_version)
+          auth_token.update(rate_limit_reset_at: nil) unless auth_token.rate_limit_reset_at.nil?
+          sleep API_REQUESTS_RATE_PER_TOKEN / number_of_available_tokens
+          return auth_token
+        else
+          reset_time = DateTime.now + AuthToken.new_client(auth_token.token).rate_limit.resets_in.seconds
+          auth_token.update(rate_limit_reset_at: reset_time)
+        end
+      end
     end
   end
 
