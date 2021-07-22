@@ -50,6 +50,12 @@ tables. Rails makes this easy through the use of "Rake" tasks.
 bundle exec rake db:create db:migrate
 ```
 
+Go create a [Personal access token on GitLab](https://docs.gitlab.com/ee/user/profile/personal_access_token.html) (only require `read_api` access), and make entry in `.env` file located in your root application directory:
+
+```bash
+GITLAB_KEY=your_gitlab_personal_access_token
+```
+
 Go create a [Personal access token on GitHub](https://help.github.com/articles/creating-an-access-token-for-command-line-use/) (only requires `public_repo` access), then we can download some sample data:
 
 ```sh
