@@ -30,9 +30,9 @@ namespace :download do
     PackageManager::Bower.import_new_async
   end
 
-  desc "Download all Bower packages"
+  desc "Download all Bower packages asynchronously"
   task bower_all: :environment do
-    PackageManager::Bower.import
+    PackageManager::Bower.import_async
   end
 
   desc "Download recent Cargo packages asynchronously"
