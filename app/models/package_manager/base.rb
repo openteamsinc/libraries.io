@@ -105,6 +105,10 @@ module PackageManager
 
       begin
         db_project.save!
+      rescue ActiveRecord::StatementInvalid => e
+        db_project.description = db_project.description.force_encoding('GB18030').encode('UTF-8')
+        db_project.save!
+
       rescue ActiveRecord::RecordInvalid => e
         raise e unless e.message =~ /Name has already been taken/
 
