@@ -1,4 +1,4 @@
-version: '3.0'
+version: '2.0'
 
 volumes:
   postgres-data:
@@ -11,44 +11,48 @@ volumes:
     driver: local
 
 services:
-  postgres:
-    image: postgres:9.6.3
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=not-a-secret
-      - POSTGRES_USER=librariesio
-
   elasticsearch:
     image: elasticsearch:2.4.5
+    restart: always
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     command: -Daction.auto_create_index=true
+    mem_limit: 2G
 
   redis:
     image: redis:3.2.9
+    restart: always
     volumes:
       - redis-data:/var/lib/redis
     command: redis-server --appendonly yes
+    mem_limit: 2G
+
 
   sidekiq: &app_base
     build:
       context: .
     image: librariesio/libraries.io
+    restart: always
     environment:
-      - DATABASE_URL=postgresql://librariesio:not-a-secret@postgres/librariesio
+      - DATABASE_URL=postgresql://postgreslibio:3n49jJEanij@ot-libio-rds.chwq8pc739fe.us-west-2.rds.amazonaws.com/libio
       - REDISCLOUD_URL=redis://redis:6379/1
       - ELASTICSEARCH_CLUSTER_URL=elasticsearch:9200
     volumes:
       - .:/libraries.io
     depends_on:
-      - postgres
       - elasticsearch
       - redis
     command: bundle exec sidekiq -C config/sidekiq.yml
+    mem_limit: 10G
+
 
   web:
     <<: *app_base
+    volumes:
+      - /home/developer:/namesFolder
+      - .:/libraries.io
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server --port 3000 --binding '0.0.0.0'"
     ports:
       - "3000:3000"
+    restart: always
+    mem_limit: 2G
