@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 require 'csv'
 
 EXPORT_VERSION = '1.6.0'

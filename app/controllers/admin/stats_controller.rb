@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class Admin::StatsController < Admin::ApplicationController
   def index
     @recent_users = User.order('created_at DESC').limit(19)

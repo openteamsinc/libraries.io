@@ -47,18 +47,18 @@ module PackageManager
       {}
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project["name"],
-        description: raw_project["info"],
-        homepage: raw_project["homepage_uri"],
-        licenses: raw_project.fetch("licenses", []).try(:join, ","),
-        repository_url: repo_fallback(raw_project["source_code_uri"], raw_project["homepage_uri"]),
+        name: project["name"],
+        description: project["info"],
+        homepage: project["homepage_uri"],
+        licenses: project.fetch("licenses", []).try(:join, ","),
+        repository_url: repo_fallback(project["source_code_uri"], project["homepage_uri"]),
       }
     end
 
-    def self.versions(raw_project, _name)
-      json = get_json("https://rubygems.org/api/v1/versions/#{raw_project['name']}.json")
+    def self.versions(project, _name)
+      json = get_json("https://rubygems.org/api/v1/versions/#{project['name']}.json")
       json.map do |v|
         license = v.fetch("licenses", "")
         license = "" if license.nil?
@@ -72,7 +72,7 @@ module PackageManager
       []
     end
 
-    def self.dependencies(name, version, _mapped_project)
+    def self.dependencies(name, version, _project)
       json = get_json("https://rubygems.org/api/v2/rubygems/#{name}/versions/#{version}.json")
 
       deps = json["dependencies"]

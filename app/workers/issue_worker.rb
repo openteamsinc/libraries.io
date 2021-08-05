@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class IssueWorker
   include Sidekiq::Worker
   sidekiq_options queue: :issues, unique: :until_executed

@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 namespace :export do
   task platform: :environment do
     require 'csv'

@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 require "rails_helper"
 
 describe "Api::BowerSearchController", elasticsearch: true do
@@ -24,6 +23,7 @@ describe "Api::BowerSearchController", elasticsearch: true do
             latest_download_url: nil,
             latest_release_number: project.latest_release_number,
             latest_release_published_at: project.latest_release_published_at,
+            latest_stable_release: project.latest_stable_release,
             latest_stable_release_number: project.latest_stable_release_number,
             latest_stable_release_published_at: project.latest_stable_release_published_at,
             license_normalized: project.license_normalized,

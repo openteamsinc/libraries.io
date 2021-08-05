@@ -38,11 +38,10 @@ gem "gemoji"
 gem "github-linguist"
 gem "github-markup", require: "github/markup"
 gem "gitlab"
-gem "graphql-client", "~> 0.16.0"
+gem "graphql-client", "~> 0.14.0"
 gem "groupdate"
 gem "hiredis"
 gem "indefinite_article"
-gem 'jb'
 gem "jquery-rails"
 gem "license-compatibility"
 gem "listen"
@@ -69,7 +68,7 @@ gem "rack-attack"
 gem "rack-attack-rate-limit", require: "rack/attack/rate-limit"
 gem "rack-canonical-host"
 gem "rack-cors", require: "rack/cors"
-gem "rails", "5.2.5"
+gem "rails", "5.2.4.4"
 gem "rails-timeago", git: "https://github.com/librariesio/rails-timeago"
 gem "rb-readline"
 gem "rdoc"
@@ -85,7 +84,7 @@ gem "simple-rss"
 gem "simple_form"
 gem "sitemap_generator"
 gem "spdx"
-gem "tomlrb"
+gem "toml"
 gem "turbolinks"
 gem "typhoeus"
 gem "uglifier"
@@ -103,7 +102,6 @@ end
 group :development, :test do
   gem "pry"
   gem "rspec-rails"
-  gem "rubocop", "~> 1.0.0", require: false
 end
 
 group :test do
@@ -129,5 +127,6 @@ end
 
 gem "scenic", "~> 1.4"
 
+gem "rubocop", "~> 0.80.1"
 
 gem "chartkick", "~> 3.4"

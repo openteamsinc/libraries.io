@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 brew 'redis'
 brew 'memcached'
 brew 'postgres'

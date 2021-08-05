@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 require 'typhoeus/adapters/faraday'
 require 'google/cloud/trace/faraday_middleware' if Rails.env.production?
 

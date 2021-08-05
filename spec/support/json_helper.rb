@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module JsonHelper
   def json
     (reparse_and_never_memoize_as_response_may_change = -> do

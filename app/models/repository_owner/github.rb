@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module RepositoryOwner
   class Github < Base
     def avatar_url(size = 60)

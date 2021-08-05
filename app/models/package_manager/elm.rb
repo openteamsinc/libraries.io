@@ -25,7 +25,13 @@ module PackageManager
     end
 
     def self.projects
-      @projects ||= get("http://package.elm-lang.org/all-packages")
+      @projects ||= begin
+        prjs = {}
+        get("http://package.elm-lang.org/all-packages").each do |prj|
+          prjs[prj["name"]] = prj
+        end
+        prjs
+      end
     end
 
     def self.recent_names
@@ -33,38 +39,42 @@ module PackageManager
     end
 
     def self.project(name)
-      get("http://package.elm-lang.org/packages/#{name}/latest/elm.json")
+      projects[name]
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project["name"],
-        description: raw_project["summary"],
-        repository_url: "https://github.com/#{raw_project['name']}",
+        name: project["name"],
+        description: project["summary"],
+        repository_url: "https://github.com/#{project['name']}",
       }
     end
 
-    def self.versions(_raw_project, name)
-      get("https://package.elm-lang.org/packages/#{name}/releases.json")
-        .map do |version, timestamp|
-          {
-            number: version,
-            published_at: Time.at(timestamp),
-          }
-        end
+    def self.versions(project, _name)
+      project["versions"].map do |v|
+        { number: v }
+      end
     end
 
-    def self.dependencies(name, version, _mapped_project)
-      get("http://package.elm-lang.org/packages/#{name}/#{version}/elm.json")
-        .fetch("dependencies", {})
-        .map do |name, requirement|
-          {
-            project_name: name,
-            requirements: requirement,
-            kind: "runtime",
-            platform: self.name.demodulize,
-          }
+    def self.dependencies(name, version, project)
+      find_and_map_dependencies(name, version, project)
+    end
+
+    def self.find_dependencies(name, version)
+      url = "https://raw.githubusercontent.com/#{name}/#{version}/elm-package.json"
+
+      begin
+        response = request(url)
+        if response.status == 200
+          contents = response.body
+          dependencies = Bibliothecary.analyse_file("elm-package.json", contents).first.try(:fetch, :dependencies)
+          dependencies
+        else
+          []
         end
+      rescue StandardError
+        []
+      end
     end
   end
 end

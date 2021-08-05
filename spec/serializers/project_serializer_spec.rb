@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 require 'rails_helper'
 
 describe ProjectSerializer do
@@ -15,6 +14,7 @@ describe ProjectSerializer do
       latest_download_url
       latest_release_number
       latest_release_published_at
+      latest_stable_release
       latest_stable_release_number
       latest_stable_release_published_at
       license_normalized

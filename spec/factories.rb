@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 require 'securerandom'
 
 FactoryBot.define do
@@ -162,13 +161,8 @@ FactoryBot.define do
 
   factory :user do
     email
-    after(:create) do |user|
+    after(:create) do |user, _evaluator|
       create(:identity, user: user)
-    end
-    trait :internal do
-      after(:create) do |user|
-        user.current_api_key.update_attribute(:is_internal, true)
-      end
     end
   end
 

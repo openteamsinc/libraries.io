@@ -47,21 +47,21 @@ module PackageManager
       { name: name, html: html, info: info }
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project[:name],
-        homepage: raw_project[:info].fetch("URL:", "").split(",").first,
-        description: raw_project[:html].css("h2").text.split(":")[1..-1].join(":").strip,
-        licenses: raw_project[:info]["License:"],
-        repository_url: repo_fallback("", (raw_project[:info].fetch("URL:", "").split(",").first.presence || raw_project[:info]["BugReports:"])).to_s[0, 255],
+        name: project[:name],
+        homepage: project[:info].fetch("URL:", "").split(",").first,
+        description: project[:html].css("h2").text.split(":")[1..-1].join(":").strip,
+        licenses: project[:info]["License:"],
+        repository_url: repo_fallback("", (project[:info].fetch("URL:", "").split(",").first.presence || project[:info]["BugReports:"])),
       }
     end
 
-    def self.versions(raw_project, _name)
+    def self.versions(project, _name)
       [{
-        number: raw_project[:info]["Version:"],
-        published_at: raw_project[:info]["Published:"],
-      }] + find_old_versions(raw_project)
+        number: project[:info]["Version:"],
+        published_at: project[:info]["Published:"],
+      }] + find_old_versions(project)
     end
 
     def self.find_old_versions(project)
@@ -79,8 +79,8 @@ module PackageManager
       end
     end
 
-    def self.dependencies(name, version, mapped_project)
-      find_and_map_dependencies(name, version, mapped_project)
+    def self.dependencies(name, version, project)
+      find_and_map_dependencies(name, version, project)
     end
 
     def self.find_dependencies(name, version)

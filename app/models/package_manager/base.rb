@@ -87,90 +87,84 @@ module PackageManager
       find(platform).try(:formatted_name) || platform
     end
 
-    def self.update(name, sync_version: :all)
-      if sync_version != :all && !self::SUPPORTS_SINGLE_VERSION_UPDATE
-        Rails.logger.warn("#{db_platform}.update(#{name}, sync_version: #{sync_version}) called but not supported on platform")
-        return
-      end
+    def self.map_project(project)
+      mapped_project = mapping(project)
+      mapped_project = mapped_project.delete_if { |_key, value| value.blank? } if mapped_project.present?
+      mapped_project
+    end
 
-      raw_project = project(name)
-      return false unless raw_project.present?
+    def self.save(project, sync_versions: true)
+      return unless project.present?
 
-      mapped_project = mapping(raw_project).try(&:compact)
+      mapped_project = map_project(project)
       return false unless mapped_project.present?
 
-      db_project = Project.find_or_initialize_by({ name: mapped_project[:name], platform: db_platform })
-      db_project.reformat_repository_url if sync_version == :all && !db_project.new_record?
-      db_project.attributes = mapped_project.except(:name, :releases, :versions, :version, :dependencies, :properties)
-
-      begin
-        db_project.save!
-      rescue ActiveRecord::StatementInvalid => e
-        db_project.description = db_project.description.force_encoding('GB18030').encode('UTF-8')
-        db_project.save!
-
-      rescue ActiveRecord::RecordInvalid => e
-        raise e unless e.message =~ /Name has already been taken/
-
-        # Probably a race condition with multiple versions of a new project being updated.
-        db_project = Project.find_by(platform: db_platform, name: mapped_project[:name])
+      dbproject = Project.find_or_initialize_by({ name: mapped_project[:name], platform: db_platform })
+      if dbproject.new_record?
+        dbproject.assign_attributes(mapped_project.except(:name, :releases, :versions, :version, :dependencies, :properties))
+        dbproject.save
+      else
+        dbproject.reformat_repository_url
+        attrs = mapped_project.except(:name, :releases, :versions, :version, :dependencies, :properties)
+        dbproject.update_attributes(attrs)
       end
 
-      if self::HAS_VERSIONS
-        if sync_version == :all
-          versions(raw_project, db_project.name)
-            .each { |v| add_version(db_project, v) }
-            .tap { |vs| deprecate_versions(db_project, vs) }
-        else
-          add_version(db_project, one_version(raw_project, sync_version))
-          # TODO: handle deprecation here too
+      if self::HAS_VERSIONS && sync_versions
+        versions(project, dbproject.name).each do |vers|
+          add_version(dbproject, vers)
         end
       end
 
-      save_dependencies(mapped_project, sync_version: sync_version) if self::HAS_DEPENDENCIES
-      finalize_db_project(db_project)
+      save_dependencies(mapped_project) if self::HAS_DEPENDENCIES
+      finalize_dbproject(dbproject)
     end
 
-    def self.add_version(db_project, version_hash)
-      return if version_hash.blank?
-
-      # Protect version against stray data
-      version_hash = version_hash.symbolize_keys.slice(
-        :number,
-        :published_at,
-        :runtime_dependencies_count,
-        :spdx_expression,
-        :original_license,
-        :repository_sources,
-        :status
-      )
-
-      existing = db_project.versions.find_or_initialize_by(number: version_hash[:number])
-      existing.assign_attributes(version_hash)
-
-      existing.repository_sources = Set.new(existing.repository_sources).add(self::REPOSITORY_SOURCE_NAME).to_a if self::HAS_MULTIPLE_REPO_SOURCES
-      existing.save!
-    rescue ActiveRecord::RecordInvalid => e
-      # Until all package managers support version-specific updates, we'll have this race condition
-      # of 2+ jobs trying to add versions at the same time.
-      raise e unless e.message =~ /Number has already been taken/
-    end
-
-    def self.deprecate_versions(db_project, version_hash)
-      case db_project.platform.downcase
-      when "rubygems" # yanked gems will be omitted from project JSON versions
-        db_project
-          .versions
-          .where.not(number: version_hash.pluck(:number))
-          .update_all(status: "Removed")
+    def self.update_version(name, version)
+      unless self::SUPPORTS_SINGLE_VERSION_UPDATE
+        logger.warn("#{db_platform}.update_version(#{name}, #{version}) called but not supported on platform")
+        return
       end
+
+      update(name, sync_versions: false)
+      mapped_project=map_project(project(name))
+      unless mapped_project.present?
+        logger.warn("No mapped project for #{db_platform}/#{name}")
+        return
+      end
+
+      dbproject = Project.find_by!(name: mapped_project[:name], platform: db_platform)
+      add_version(dbproject, one_version(dbproject.name, version))
+      save_dependencies(mapped_project) if self::HAS_DEPENDENCIES
+      finalize_dbproject(dbproject)
     end
 
-    def self.finalize_db_project(db_project)
-      db_project.reload
-      db_project.download_registry_users
-      db_project.update!(last_synced_at: Time.now)
-      db_project
+    def self.add_version(dbproject, version_hash)
+      existing = dbproject.versions.find_or_initialize_by(number: version_hash[:number]) do |new_version|
+        new_version.update_attributes(version_hash)
+      end
+      existing.repository_sources = Set.new(existing.repository_sources).add(self::REPOSITORY_SOURCE_NAME).to_a if self::HAS_MULTIPLE_REPO_SOURCES
+      existing.save
+    end
+
+    def self.finalize_dbproject(dbproject)
+      dbproject.reload
+      dbproject.download_registry_users
+      dbproject.last_synced_at = Time.now
+      dbproject.save
+      dbproject
+    end
+
+    def self.update(name, sync_versions: true)
+      proj = project(name)
+      save(proj, sync_versions: sync_versions) if proj.present?
+    rescue SystemExit, Interrupt
+      exit 0
+    rescue StandardError => e
+      if ENV["RACK_ENV"] == "production"
+        Bugsnag.notify(e)
+      else
+        raise
+      end
     end
 
     def self.import_async
@@ -210,33 +204,32 @@ module PackageManager
       names - existing_names
     end
 
-    def self.save_dependencies(mapped_project, sync_version: :all)
+    def self.save_dependencies(mapped_project)
       name = mapped_project[:name]
-      db_project = Project.find_by(name: name, platform: db_platform)
-      db_versions = db_project.versions.includes(:dependencies)
-      db_versions = db_versions.where(number: sync_version) unless sync_version == :all
-      db_versions.each do |db_version|
-        next if db_version.dependencies.any?
+      proj = Project.find_by(name: name, platform: db_platform)
+      proj.versions.includes(:dependencies).each do |version|
+        next if version.dependencies.any?
 
         deps = begin
-          dependencies(name, db_version.number, mapped_project)
-        rescue StandardError
-          []
-        end
+                 dependencies(name, version.number, mapped_project)
+               rescue StandardError
+                 []
+               end
+        next unless deps&.any? && version.dependencies.empty?
 
         deps.each do |dep|
-          next if dep[:project_name].blank? || dep[:requirements].blank? || db_version.dependencies.any? { |d| d.project_name == dep[:project_name] }
+          next if dep[:project_name].blank? || version.dependencies.find_by_project_name(dep[:project_name])
 
           named_project_id = Project
             .find_best(db_platform, dep[:project_name].strip)
             &.id
-          db_version.dependencies.create!(dep.merge(project_id: named_project_id.try(:strip)))
+          version.dependencies.create(dep.merge(project_id: named_project_id.try(:strip)))
         end
-        db_version.set_runtime_dependencies_count if deps.any?
+        version.set_runtime_dependencies_count
       end
     end
 
-    def self.dependencies(_name, _version, _mapped_project)
+    def self.dependencies(_name, _version, _project)
       []
     end
 
@@ -252,7 +245,7 @@ module PackageManager
       end
     end
 
-    def self.find_and_map_dependencies(name, version, _mapped_project)
+    def self.find_and_map_dependencies(name, version, _project)
       dependencies = find_dependencies(name, version)
       return [] unless dependencies&.any?
 
@@ -296,8 +289,7 @@ module PackageManager
     private_class_method def self.get_raw(url, options = {})
       rsp = request(url, options)
       return "" unless rsp.status == 200
-
-      rsp.body
+      return rsp.body
     end
 
     private_class_method def self.request(url, options = {})
@@ -326,7 +318,8 @@ module PackageManager
 
     private_class_method def self.download_async(names)
       names.each_slice(1000).each_with_index do |group, index|
-        group.each { |name| PackageManagerDownloadWorker.perform_in(index.hours, self.name, name) }
+        group.each { |name| PackageManagerDownloadWorker.perform_in(index.minutes, self.name, name) }
+      #	group.each { |name| PackageManagerDownloadWorker.perform_in(index.hours, self.name, name) }
       end
     end
   end

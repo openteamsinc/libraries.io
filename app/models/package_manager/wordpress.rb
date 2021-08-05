@@ -55,34 +55,23 @@ module PackageManager
       get("https://api.wordpress.org/plugins/info/1.0/#{name}.json")
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project["slug"],
-        description: raw_project["short_description"],
-        homepage: raw_project["homepage"],
-        keywords_array: (raw_project["tags"].presence || {}).values,
-        repository_url: repo_fallback("", raw_project["homepage"]),
+        name: project["slug"],
+        description: project["short_description"],
+        homepage: project["homepage"],
+        keywords_array: Array.wrap(project.fetch("tags", {}).values),
+        repository_url: repo_fallback("", project["homepage"]),
       }
     end
 
-    def self.versions(raw_project, _name)
-      if raw_project["versions"].present?
-        raw_project["versions"]
-          .reject { |k, _v| k == "trunk" }
-          .map do |k, _v|
-          {
-            number: k,
-            published_at: k == raw_project["version"] ? raw_project["last_updated"] : nil
-          }
-        end
-      else
-        [
-          {
-            number: raw_project["version"],
-            published_at: raw_project["last_updated"],
-          }
-        ]
-      end
+    def self.versions(project, _name)
+      [
+        {
+          number: project["version"],
+          published_at: project["last_updated"],
+        },
+      ]
     end
   end
 end

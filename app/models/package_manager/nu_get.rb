@@ -25,11 +25,11 @@ module PackageManager
       info = get("https://api.nuget.org/v3/registration5-gz-semver2/#{name.downcase}/index.json")
       deprecation = info.dig("items")&.first&.dig("items")&.first&.dig("catalogEntry", "deprecation")
 
-      # alternate_package is not currently stored in DB but I wanted to record it because it seems useful
+      #alternate_package is not currently stored in DB but I wanted to record it because it seems useful
       {
         is_deprecated: deprecation.present?,
         message: deprecation.present? ? deprecation["message"] : "",
-        alternate_package: deprecation.present? ? deprecation.dig("alternatePackage", "id") : nil,
+        alternate_package: deprecation.present? ? deprecation.dig("alternatePackage", "id") : nil
       }
     end
 
@@ -91,16 +91,16 @@ module PackageManager
       []
     end
 
-    def self.mapping(raw_project)
-      item = raw_project[:releases].last["catalogEntry"]
+    def self.mapping(project)
+      item = project[:releases].last["catalogEntry"]
 
       {
-        name: raw_project[:name],
+        name: project[:name],
         description: description(item),
         homepage: item["projectUrl"],
         keywords_array: Array(item["tags"]),
         repository_url: repo_fallback("", item["projectUrl"]),
-        releases: raw_project[:releases],
+        releases: project[:releases],
         licenses: item["licenseExpression"],
       }
     end
@@ -109,17 +109,12 @@ module PackageManager
       item["description"].blank? ? item["summary"] : item["description"]
     end
 
-    def self.versions(raw_project, _name)
-      raw_project[:releases].map do |item|
-        license = [
-          item.dig("catalogEntry", "licenseExpression"),
-          item.dig("catalogEntry", "licenseUrl"),
-        ].detect(&:present?)
-
+    def self.versions(project, _name)
+      project[:releases].map do |item|
         {
           number: item["catalogEntry"]["version"],
           published_at: item["catalogEntry"]["published"],
-          original_license: license,
+          original_license: item.dig("catalogEntry", "licenseExpression"),
         }
       end
     end

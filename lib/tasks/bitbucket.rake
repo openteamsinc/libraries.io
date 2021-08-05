@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 namespace :bitbucket do
   task find_new_repos: :environment do
     exit if ENV['READ_ONLY'].present?

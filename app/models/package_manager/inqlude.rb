@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module PackageManager
   class Inqlude < Base
     HAS_VERSIONS = false
@@ -25,13 +24,13 @@ module PackageManager
       Oj.load `cat inqlude-data/#{name}/#{version}`
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project['name'],
-        description: raw_project["summary"],
-        homepage: raw_project["urls"]["homepage"],
-        licenses: raw_project['licenses'].join(','),
-        repository_url: repo_fallback(raw_project["urls"]["vcs"], '')
+        :name => project['name'],
+        :description => project["summary"],
+        :homepage => project["urls"]["homepage"],
+        :licenses => project['licenses'].join(','),
+        :repository_url => repo_fallback(project["urls"]["vcs"], '')
       }
     end
   end

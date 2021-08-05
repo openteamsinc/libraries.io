@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module PackageManager
   class Alcatraz < Base
     HAS_VERSIONS = false
@@ -28,11 +27,11 @@ module PackageManager
       projects[name.downcase]
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project["name"],
-        description: raw_project["description"],
-        repository_url: raw_project['url']
+        :name => project["name"],
+        :description => project["description"],
+        :repository_url => project['url']
       }
     end
   end

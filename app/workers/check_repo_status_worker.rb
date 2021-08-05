@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class CheckRepoStatusWorker
   include Sidekiq::Worker
   sidekiq_options queue: :status, unique: :until_executed

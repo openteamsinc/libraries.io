@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 Octokit.middleware = Faraday::RackBuilder.new do |builder|
   builder.use Octokit::Middleware::FollowRedirects
   builder.use Octokit::Response::RaiseError

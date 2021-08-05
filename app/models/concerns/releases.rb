@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module Releases
   def stable_releases
     versions.select(&:stable?)
@@ -19,6 +18,10 @@ module Releases
 
   def latest_stable_release
     latest_stable_version || latest_stable_tag
+  end
+
+  def latest_stable_release_number
+    latest_stable_release.try(:number)
   end
 
   def latest_version

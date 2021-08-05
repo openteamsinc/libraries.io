@@ -30,27 +30,24 @@ module PackageManager
       projects.map { |project| project["id"] }.sort.uniq
     end
 
-    def self.project(name)
+    def self.project(id)
       sleep 1
-      # PlatformIO only takes its ids for project lookups, so we have to find it first.
-      if (db_project = Project.find_by(platform: "PlatformIO", name: name))
-        get("https://api.platformio.org/lib/info/#{db_project.pm_id}")
-      end
+      get("https://api.platformio.org/lib/info/#{id}")
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project["name"],
-        pm_id: raw_project["id"],
-        homepage: raw_project["homepage"],
-        description: raw_project["description"],
-        keywords_array: Array.wrap(raw_project["keywords"]),
-        repository_url: repo_fallback("", raw_project["repository"]),
+        name: project["name"],
+        pm_id: project["id"],
+        homepage: project["homepage"],
+        description: project["description"],
+        keywords_array: Array.wrap(project["keywords"]),
+        repository_url: repo_fallback("", project["repository"]),
       }
     end
 
-    def self.versions(raw_project, _name)
-      version = raw_project["version"]
+    def self.versions(project, _name)
+      version = project["version"]
       return [] if version.nil?
 
       [{

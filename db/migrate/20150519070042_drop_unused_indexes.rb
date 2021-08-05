@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class DropUnusedIndexes < ActiveRecord::Migration[5.0]
   def change
     remove_index :dependencies, column: [:platform, :project_name]

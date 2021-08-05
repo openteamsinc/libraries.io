@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class Readme < ApplicationRecord
   VALID_EXTENSION_REGEXES = [
     /md/,

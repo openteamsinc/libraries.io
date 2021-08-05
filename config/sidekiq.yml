@@ -1,13 +1,13 @@
 ---
-:concurrency: 2
+:concurrency: 60
 production:
-  :concurrency: 25
+  :concurrency: 50
 :timeout: 8
 :queues:
-  - [user, 40]
+#  - [user, 40]
   - [critical, 30]
   - [repo_maintenance_stat_high, 25]
-  - [mailers, 8]
+#  - [mailers, 8]
   - [tree, 6]
   - [repo_maintenance_stat, 4]
   - [default, 4]

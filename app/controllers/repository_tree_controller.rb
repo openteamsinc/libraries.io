@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class RepositoryTreeController < ApplicationController
   before_action :load_repo
 

@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class ApplicationController < ActionController::Base
   include Rails::Pagination
   # Prevent CSRF attacks by raising an exception.
@@ -9,14 +8,7 @@ class ApplicationController < ActionController::Base
 
   before_action :log_active_connections
 
-  around_action :trace_span
-
   private
-
-  def trace_span(&block)
-    Google::Cloud::Trace
-      .in_span("endpoint##{controller_path}##{action_name}", &block)
-  end
 
   def log_active_connections
     # Only log 1 in 10 requests
@@ -212,7 +204,7 @@ class ApplicationController < ActionController::Base
     raise ActiveRecord::RecordNotFound if @repository.nil?
     raise ActiveRecord::RecordNotFound if @repository.status == 'Hidden'
     raise ActiveRecord::RecordNotFound unless authorized?
-    redirect_to url_for(@repository.to_param), status: :moved_permanently if full_name != @repository.full_name
+    redirect_to url_for(@repository.to_param), :status => :moved_permanently if full_name != @repository.full_name
   end
 
   def authorized?

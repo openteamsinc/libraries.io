@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class UpdateRepositorySourceRankWorker
   include Sidekiq::Worker
   sidekiq_options queue: :sourcerank, unique: :until_executed

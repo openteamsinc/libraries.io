@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class Repository < ApplicationRecord
   include RepoSearch
   include Status
@@ -226,7 +225,7 @@ class Repository < ApplicationRecord
       download_manifests(token)
       update_source_rank(true)
     end
-    update(last_synced_at: Time.now)
+    update_attributes(last_synced_at: Time.now)
   end
 
   def update_from_repository(token)
@@ -294,13 +293,6 @@ class Repository < ApplicationRecord
       repository.download_manifests(user.token)
       repository.update_all_info_async(user.token)
     end
-  end
-
-  def self.update_stargazers_count(repo_name)
-    repository = Repository.host('GitHub').find_by_full_name(repo_name)
-    return unless repository
-    stargazers_count = repository.repository_host.retrieve_stargazers_count
-    repository.update(stargazers_count: stargazers_count)
   end
 
   def self.update_from_star(repo_name)

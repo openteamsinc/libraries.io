@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module GithubIdentity
   def github_enabled?
     token
@@ -15,7 +14,7 @@ module GithubIdentity
 
   def hidden=(val)
     return unless repository_user
-    repository_user.update(hidden: val)
+    repository_user.update_attributes(hidden: val)
   end
 
   def github_settings_url

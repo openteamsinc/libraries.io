@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class Subscription < ApplicationRecord
   validates_presence_of :project
   validates_uniqueness_of :project, scope: :user_id, if: :user_id_present?

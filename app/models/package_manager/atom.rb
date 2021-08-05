@@ -44,19 +44,20 @@ module PackageManager
       get("https://atom.io/api/packages/#{CGI.escape(name.strip)}")
     end
 
-    def self.mapping(raw_project)
-      metadata = raw_project["metadata"]
-      metadata = raw_project if metadata.nil?
+    def self.mapping(project)
+      metadata = project["metadata"]
+      metadata = project if metadata.nil?
       repo = metadata["repository"].is_a?(Hash) ? metadata["repository"]["url"] : metadata["repository"]
       {
-        name: raw_project["name"],
+        name: project["name"],
         description: metadata["description"],
         repository_url: repo_fallback(repo, ""),
+        versions: project["versions"],
       }
     end
 
-    def self.versions(raw_project, _name)
-      raw_project["versions"].map do |k, _v|
+    def self.versions(project, _name)
+      project["versions"].map do |k, _v|
         {
           number: k,
           published_at: nil,
@@ -64,8 +65,8 @@ module PackageManager
       end
     end
 
-    def self.dependencies(_name, version, mapped_project)
-      vers = mapped_project[:versions][version]
+    def self.dependencies(_name, version, project)
+      vers = project[:versions][version]
       return [] if vers.nil?
 
       map_dependencies(vers.fetch("dependencies", {}), "runtime", false, "Npm") +

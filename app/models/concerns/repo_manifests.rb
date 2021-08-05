@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module RepoManifests
   def download_manifests(token = nil)
     file_list = get_file_list(token)

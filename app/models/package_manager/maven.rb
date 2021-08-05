@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 module PackageManager
-  class Maven < MultipleSourcesBase
+  class Maven < Base
     HAS_VERSIONS = true
     HAS_DEPENDENCIES = true
+    HAS_MULTIPLE_REPO_SOURCES = true
     REPOSITORY_SOURCE_NAME = "Maven"
     BIBLIOTHECARY_SUPPORT = true
     SECURITY_PLANNED = true
@@ -15,7 +16,6 @@ module PackageManager
       "http://www.eclipse.org/legal/epl-v10" => "Eclipse Public License (EPL), Version 1.0",
       "http://www.eclipse.org/org/documents/edl-v10" => "Eclipse Distribution License (EDL), Version 1.0",
     }.freeze
-    NAME_DELIMITER = ":"
 
     PROVIDER_MAP = {
       "Atlassian" => Atlassian,
@@ -23,16 +23,38 @@ module PackageManager
       "Hortonworks" => Hortonworks,
       "Maven" => MavenCentral,
       "SpringLibs" => SpringLibs,
-      "Jboss" => Jboss,
-      "JbossEa" => JbossEa,
     }.freeze
 
-    class POMNotFound < StandardError
-      attr_reader :url
-      def initialize(url)
-        @url = url
-        super("Missing POM: #{@url}")
-      end
+    def self.providers(project)
+      project
+        .versions
+        .flat_map(&:repository_sources)
+        .compact
+        .uniq
+        .map { |source| PROVIDER_MAP[source] } || [PROVIDER_MAP["default"]]
+    end
+
+    def self.package_link(project, version = nil)
+      db_version = project.versions.find_by(number: version)
+      repository_source = db_version&.repository_sources&.first.presence || "default"
+      PROVIDER_MAP[repository_source].package_link(project, version)
+    end
+
+    def self.download_url(name, version = nil)
+      project = Project.find_by(name: name, platform: "Maven")
+      db_version = project.versions.find_by(number: version)
+      repository_source = db_version&.repository_sources&.first.presence || "default"
+      PROVIDER_MAP[repository_source].download_url(name, version)
+    end
+
+    def self.check_status_url(project)
+      source = project.versions.flat_map(&:repository_sources).compact.uniq.first.presence || "default"
+      PROVIDER_MAP[source].check_status_url(project)
+    end
+
+    def self.load_names(_limit = nil)
+      names = get("https://maven.libraries.io/mavenCentral/all")
+      names.each { |name| REDIS.sadd("maven-names", name) }
     end
 
     def self.repository_base
@@ -40,34 +62,35 @@ module PackageManager
     end
 
     def self.project_names
-      get("https://maven.libraries.io/mavenCentral/all")
+      REDIS.smembers("maven-names")
+    end
+
+    def self.recent_names
+      PROVIDER_MAP["default"].recent_names
     end
 
     def self.project(name)
-      sections = name.split(NAME_DELIMITER)
+      sections = name.split(":")
       path = sections.join("/")
-
-      latest = latest_version(name)
-
-      return {} unless latest.present?
+      versions = versions(nil, name)
+      latest_version = latest_version(versions, name)
+      return {} unless latest_version.present?
 
       {
         name: name,
         path: path,
         group_id: sections[0],
         artifact_id: sections[1],
-        latest_version: latest,
+        versions: versions,
+        latest_version: latest_version,
       }
     rescue StandardError
       {}
     end
 
-    def self.mapping(raw_project, depth = 0)
-      latest_version_xml = get_pom(raw_project[:group_id], raw_project[:artifact_id], raw_project[:latest_version])
-      mapping_from_pom_xml(latest_version_xml, depth).merge({ name: raw_project[:name] })
-    rescue POMNotFound => e
-      Rails.logger.info "Missing POM: #{e.url}"
-      nil
+    def self.mapping(project, depth = 0)
+      version_xml = get_pom(project[:group_id], project[:artifact_id], project[:latest_version])
+      mapping_from_pom_xml(version_xml, depth).merge({ name: project[:name] })
     end
 
     def self.mapping_from_pom_xml(version_xml, depth = 0)
@@ -123,7 +146,7 @@ module PackageManager
     end
 
     def self.dependencies(name, version, project)
-      pom_file = get_raw(MavenUrl.from_name(name, repository_base, NAME_DELIMITER).pom(version))
+      pom_file = get_raw(MavenUrl.from_name(name, repository_base).pom(version))
       Bibliothecary::Parsers::Maven.parse_pom_manifest(pom_file, project[:properties]).map do |dep|
         {
           project_name: dep[:name],
@@ -134,20 +157,16 @@ module PackageManager
       end
     end
 
-    def self.versions(raw_project, name)
-      if raw_project && raw_project[:versions]
-        raw_project[:versions]
-      else
-        xml_metadata = maven_metadata(name)
-        xml_versions = Nokogiri::XML(xml_metadata).css("version").map(&:text)
-        retrieve_versions(xml_versions.filter { |item| !item.ends_with?("-SNAPSHOT") }, name)
-      end
+    def self.versions(_project, name)
+      xml_metadata = get_raw(MavenUrl.from_name(name, repository_base).maven_metadata)
+      xml_versions = Nokogiri::XML(xml_metadata).css("version").map(&:text)
+      retrieve_versions(xml_versions.filter { |item| !item.ends_with?("-SNAPSHOT") }, name)
     end
 
     def self.retrieve_versions(versions, name)
       versions
         .map do |version|
-          pom = get_pom(*name.split(NAME_DELIMITER, 2), version)
+          pom = get_pom(*name.split(":", 2), version)
           begin
             license_list = licenses(pom)
           rescue StandardError
@@ -158,17 +177,14 @@ module PackageManager
             published_at: Time.parse(pom.locate("publishedAt").first.text),
             original_license: license_list,
           }
-      rescue Ox::Error, POMNotFound
-        next
+        rescue Ox::Error
+          next
         end
         .compact
     end
 
     def self.download_pom(group_id, artifact_id, version)
-      url = MavenUrl.new(group_id, artifact_id, repository_base).pom(version)
-      pom_request = request(url)
-      raise POMNotFound.new(url) if pom_request.status == 404
-
+      pom_request = request(MavenUrl.new(group_id, artifact_id, repository_base).pom(version))
       xml = Ox.parse(pom_request.body)
       published_at = pom_request.headers["Last-Modified"]
       pat = Ox::Element.new("publishedAt")
@@ -209,16 +225,20 @@ module PackageManager
         .map(&:last)
     end
 
-    def self.maven_metadata(name)
-      get_raw(MavenUrl.from_name(name, repository_base, NAME_DELIMITER).maven_metadata)
-    end
-
-    def self.latest_version(name)
-      xml_metadata = maven_metadata(name)
-      latest = Nokogiri::XML(xml_metadata)
-        .css("versioning > latest, versioning > release, metadata > version")
-        .map(&:text)
-        .first
+    def self.latest_version(versions, name)
+      if versions.present?
+        versions
+          .max_by { |version| version[:published_at] }
+          .dig(:number)
+      else
+        # TODO: this is in place to handle packages that are no longer on maven-repository.com
+        # this could be removed if we switched to a package data provider that supplied full information
+        Project
+          .find_by(name: name, platform: formatted_name)
+          &.versions
+          &.max_by(&:published_at)
+          &.number
+      end
     end
 
     def self.db_platform
@@ -226,17 +246,12 @@ module PackageManager
     end
 
     class MavenUrl
-      def self.from_name(name, repo_base, delimiter = ":")
-        group_id, artifact_id = *name.split(delimiter, 2)
-
-        # Clojars names, when missing a group id, are implied to have the same group and artifact ids.
-        artifact_id = group_id if artifact_id.nil? && delimiter == PackageManager::Clojars::NAME_DELIMITER
-
-        new(group_id, artifact_id, repo_base)
+      def self.from_name(name, repo_base)
+        new(*name.split(":", 2), repo_base)
       end
 
-      def self.legal_name?(name, delimiter = ":")
-        name.present? && name.split(delimiter).size == 2
+      def self.legal_name?(name)
+        name.present? && name.split(":").size == 2
       end
 
       def initialize(group_id, artifact_id, repo_base)

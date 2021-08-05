@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 namespace :github do
   desc 'Sync github users'
   task sync_users: :environment do
@@ -25,14 +24,6 @@ namespace :github do
   task update_source_rank: :environment do
     exit if ENV['READ_ONLY'].present?
     Repository.source.not_removed.open_source.where(rank: nil).order('repositories.stargazers_count DESC').limit(500).select('id').each(&:update_source_rank_async)
-  end
-
-  desc 'Update repositories stargazers counters'
-  task update_stargazers_counters: :environment do
-    exit if ENV['READ_ONLY'].present?
-    Repository.host('Github').pluck(:full_name).each do |repo_name|
-      RepositoryUpdateStargazersCountWorker.perform_async(repo_name)
-    end
   end
 
   desc 'Sync github issues'

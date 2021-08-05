@@ -1,8 +1,7 @@
-# frozen_string_literal: true
 require 'rails_helper'
 
 describe PackageManager::Hackage do
-  let(:project) { create(:project, name: 'foo', platform: described_class.formatted_name) }
+  let(:project) { create(:project, name: 'foo', platform: described_class.name) }
 
   it 'has formatted name of "Hackage"' do
     expect(described_class.formatted_name).to eq('Hackage')

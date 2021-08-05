@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module Monitoring
   def can_enable_private_repo_tracking?
     private_repo_token.blank?

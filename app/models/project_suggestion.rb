@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class ProjectSuggestion < ApplicationRecord
   validates_presence_of :user, :project, :notes
 

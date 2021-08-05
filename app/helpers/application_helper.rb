@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 require 'uri'
 
 module ApplicationHelper
@@ -190,7 +189,7 @@ module ApplicationHelper
       options, collection_or_options = collection_or_options, nil
     end
     unless options[:renderer]
-      options = options.merge renderer: BootstrapPagination::Rails
+      options = options.merge :renderer => BootstrapPagination::Rails
     end
     super(*[collection_or_options, options].compact)
   end

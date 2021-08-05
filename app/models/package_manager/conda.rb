@@ -1,21 +1,15 @@
 # frozen_string_literal: true
 
 module PackageManager
-  class Conda < MultipleSourcesBase
+  class Conda < Base
     HAS_VERSIONS = true
     HAS_DEPENDENCIES = true
-    REPOSITORY_SOURCE_NAME = "Main"
     BIBLIOTHECARY_SUPPORT = true
-    SUPPORTS_SINGLE_VERSION_UPDATE = true
     URL = "https://anaconda.org"
     API_URL = "https://conda.libraries.io"
 
     def self.formatted_name
       "conda"
-    end
-
-    def self.db_platform
-      "Conda"
     end
 
     def self.project_names
@@ -26,17 +20,9 @@ module PackageManager
       get_json("#{API_URL}/packages")
     end
 
-    def self.one_version(raw_project, version_string)
-      get_json("#{API_URL}/#{self::REPOSITORY_SOURCE_NAME}/#{raw_project["name"]}/#{version_string}")&.first
-    end
-
-    def self.project(name)
-      get_json("#{API_URL}/#{self::REPOSITORY_SOURCE_NAME}/#{name}")
-    end
-
     def self.recent_names
       last_update = Version.where(project: Project.where(platform: "Conda")).select(:updated_at).order(updated_at: :desc).limit(1).first&.updated_at
-      packages = get_json("#{API_URL}/#{self::REPOSITORY_SOURCE_NAME}/")
+      packages = get_json("#{API_URL}/packages")
 
       return packages.keys if last_update.nil?
 
@@ -45,59 +31,31 @@ module PackageManager
       end
     end
 
-    def self.download_url(name, version = nil)
-      project = Project.find_by(name: name, platform: db_platform)
-      db_version = project.versions.find_by(number: version)
-      repository_source = db_version&.repository_sources&.first.presence || "default"
-      if version.present?
-        get_json("#{API_URL}/#{repository_source}/#{name}/#{version}")&.first&.dig("download_url")
-      else
-        get_json("#{API_URL}/#{repository_source}/#{name}")&.first&.dig("download_url")
-      end
-    end
-
     def self.package_link(project, _version = nil)
-      db_version = project.versions.last
-      repository_source = db_version&.repository_sources&.first.presence || "default"
-      PROVIDER_MAP[repository_source].package_link(project)
+      "https://anaconda.org/anaconda/#{project.name}"
     end
 
     def self.install_instructions(project, _version = nil)
-      db_version = project.versions.last
-      repository_source = db_version&.repository_sources&.first.presence || "default"
-      PROVIDER_MAP[repository_source].install_instructions(project)
+      "conda install -c anaconda #{project.name}"
     end
 
-    PROVIDER_MAP = {
-      "CondaForge" => Forge,
-      "default" => Main,
-      "Main" => Main,
-      "CondaMain" => Main,
-    }.freeze
-
-    def self.providers(project)
-      project
-        .versions
-        .flat_map(&:repository_sources)
-        .compact
-        .uniq
-        .map { |source| PROVIDER_MAP[source] } || [PROVIDER_MAP["default"]]
+    def self.project(name)
+      get_json("#{API_URL}/package/#{name}")
     end
 
     def self.check_status_url(project)
       "#{API_URL}/package/#{project.name}"
     end
 
-    def self.mapping(raw_project)
-      # TODO: can we make this more explicit?
-      raw_project.deep_symbolize_keys
+    def self.mapping(project)
+      project.deep_symbolize_keys
     end
 
-    def self.versions(raw_project, _name)
-      raw_project["versions"].map { |version| version.deep_symbolize_keys.slice(:number, :original_license, :published_at) }
+    def self.versions(project, _name)
+      project["versions"].map { |version| version.deep_symbolize_keys.slice(:number, :original_license, :published_at) }
     end
 
-    def self.dependencies(name, version, _mapped_project)
+    def self.dependencies(name, version, _project)
       version_data = get_json("#{API_URL}/package/#{name}")["versions"]
       deps = version_data.find { |item| item["number"] == version }&.dig("dependencies")&.map { |d| d.split(" ") }
       map_dependencies(deps, "runtime")

@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 if Rails.env.production?
   Google::Cloud::Trace.configure do |config|
     sampler = Google::Cloud::Trace::TimeSampler.default

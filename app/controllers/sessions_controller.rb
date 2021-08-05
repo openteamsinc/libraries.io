@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class SessionsController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [:create, :failure]
   before_action :read_only, only: [:new, :create]
@@ -49,12 +48,13 @@ class SessionsController < ApplicationController
       flash[:notice] = nil
       session[:user_id] = identity.user.id
     end
-
+    
     identity.user.update_columns(last_login_at: Time.current)
     identity.user.update_repo_permissions_async
     login_destination = pre_login_destination
 
-    redirect_to login_destination || root_path
+    redirect_to(root_path) && return unless login_destination
+    redirect_to login_destination
   end
 
   def destroy
@@ -69,13 +69,8 @@ class SessionsController < ApplicationController
   private
 
   def pre_login_destination
-    destination = session.delete(:pre_login_destination)
-    destination_host = URI(destination.to_s).host
-
-    if destination_host.blank? || destination_host == Rails.application.config.host
-      return destination
-    else
-      return false
-    end
+    destination = session[:pre_login_destination]
+    session.delete :pre_login_destination
+    return destination
   end
 end

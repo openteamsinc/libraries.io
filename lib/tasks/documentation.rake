@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 namespace :documentation do
   desc 'Generate Package Manager Matrix'
   task package_manager_matrix: :environment do

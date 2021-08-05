@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 namespace :projects do
   desc 'Sync projects'
   task sync: :environment do

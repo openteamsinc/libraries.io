@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 require 'rails_helper'
 
 describe PackageManager::Shards do
@@ -7,7 +6,7 @@ describe PackageManager::Shards do
   end
 
   describe '#package_link' do
-    let(:project) { create(:project, name: 'foo', platform: described_class.formatted_name) }
+    let(:project) { create(:project, name: 'foo', platform: described_class.name) }
 
     it 'returns a link to project website' do
       expect(described_class.package_link(project)).to eq("https://crystal-shards-registry.herokuapp.com/shards/foo")

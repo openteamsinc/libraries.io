@@ -3,19 +3,8 @@
 class Version < ApplicationRecord
   include Releaseable
 
-  STATUSES = %w[Deprecated Removed].freeze
-  API_FIELDS = %i[
-    number
-    published_at
-    spdx_expression
-    original_license
-    researched_at
-    repository_sources
-  ].freeze
-
-  validates :project_id, :number, presence: true
-  validates :number, uniqueness: { scope: :project_id }
-  validates :status, inclusion: { in: STATUSES, allow_blank: true }
+  validates_presence_of :project_id, :number
+  validates_uniqueness_of :number, scope: :project_id
 
   belongs_to :project
   counter_culture :project
@@ -23,11 +12,9 @@ class Version < ApplicationRecord
   has_many :runtime_dependencies, -> { where kind: %w[runtime normal] }, class_name: "Dependency"
 
   before_save :update_spdx_expression
-  after_create_commit { ProjectTagsUpdateWorker.perform_async(project_id) }
-  after_create_commit :send_notifications_async,
-                      :update_repository_async,
-                      :save_project,
-                      :log_version_creation
+  after_commit :send_notifications_async, on: :create
+  after_commit :update_repository_async, on: :create
+  after_commit :save_project, on: :create
 
   scope :newest_first, -> { order("versions.published_at DESC") }
 
@@ -99,22 +86,14 @@ class Version < ApplicationRecord
   end
 
   def send_notifications
-    ns = nf = nw = nil
-
-    overall = Benchmark.measure do
-      ns = Benchmark.measure { notify_subscribers }
-      nf = Benchmark.measure { notify_firehose }
-      nw = Benchmark.measure { notify_web_hooks }
+    begin
+      project.try(:repository).try(:download_tags)
+    rescue StandardError
+      nil
     end
-
-    Rails.logger.info("Version#send_notifications benchmark overall: #{overall.real * 1000}ms ns:#{ns.real * 1000}ms nf:#{nf.real * 1000}ms nw:#{nw.real * 1000}ms v_id:#{id}")
-  end
-
-  def log_version_creation
-    return if published_at == Time.at(-2_208_988_800) # NuGet sets published_at to 1/1/1900 on yank
-
-    lag = (created_at - published_at).round
-    Rails.logger.info("[NEW VERSION] platform=#{platform&.downcase || 'unknown'} name=#{project&.name} version=#{number} lag=#{lag}")
+    notify_subscribers
+    notify_firehose
+    notify_web_hooks
   end
 
   def published_at

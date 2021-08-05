@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class SubscriptionsController < ApplicationController
   before_action :ensure_logged_in
 
@@ -8,7 +7,7 @@ class SubscriptionsController < ApplicationController
 
   def update
     @subscription = current_user.subscriptions.find(params[:id])
-    @subscription.update(subscription_params)
+    @subscription.update_attributes(subscription_params)
     flash[:notice] = "Updated #{@subscription.project} subscription options"
     redirect_back fallback_location: project_path(@subscription.project.to_param)
   end

@@ -30,9 +30,9 @@ namespace :download do
     PackageManager::Bower.import_new_async
   end
 
-  desc "Download all Bower packages asynchronously"
+  desc "Download all Bower packages"
   task bower_all: :environment do
-    PackageManager::Bower.import_async
+    PackageManager::Bower.import
   end
 
   desc "Download recent Cargo packages asynchronously"
@@ -195,6 +195,12 @@ namespace :download do
     PackageManager::Nimble.import_async
   end
 
+  desc "Download recent NuGet packages asynchronously"
+  task nuget: :environment do
+    PackageManager::NuGet.load_names(3)
+    PackageManager::NuGet.import_recent_async
+  end
+
   desc "Download all NuGet packages asynchronously"
   task nuget_all: :environment do
     PackageManager::NuGet.load_names
@@ -209,6 +215,16 @@ namespace :download do
   desc "Download all NPM packages"
   task npm_all: :environment do
     PackageManager::NPM.import
+  end
+
+  desc "Download new NPM packages"
+  task npm_new: :environment do
+    PackageManager::NPM.import_new_async
+  end
+
+  desc "Download recent Packagist packages asynchronously"
+  task packagist: :environment do
+    PackageManager::Packagist.import_recent_async
   end
 
   desc "Download all Packagist packages asynchronously"

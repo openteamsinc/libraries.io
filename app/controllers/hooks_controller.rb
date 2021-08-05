@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class HooksController < ApplicationController
   skip_before_action :verify_authenticity_token
 
@@ -15,7 +14,6 @@ class HooksController < ApplicationController
   end
 
   def package
-    Rails.logger.info "HooksController#package platform=#{params['platform']} name=#{params['name']} param_keys=#{params.keys.join(',')}"
     PackageManagerDownloadWorker.perform_async("PackageManager::#{params['platform']}", params["name"])
 
     render json: nil, status: :ok

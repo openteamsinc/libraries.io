@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class Api::ProjectsController < Api::ApplicationController
   before_action :find_project, except: [:searchcode, :dependencies, :dependencies_bulk, :updated]
 
@@ -67,11 +66,10 @@ class Api::ProjectsController < Api::ApplicationController
   end
 
   def dependencies
-    @subset = params.fetch(:subset, "default")
+    subset = params.fetch(:subset, "default")
+    project_json = find_project_as_json_with_dependencies!(params[:platform], params[:name], params[:version], subset)
 
-    @project = Project.find_best!(params[:platform], params[:name], [:repository, :versions])
-    @version = @project.find_version!(params[:version])
-    # render app/views/api/projects/dependencies.json.jb
+    render json: project_json
   end
 
   def dependencies_bulk

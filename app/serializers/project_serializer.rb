@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class ProjectSerializer < ActiveModel::Serializer
   attributes %i[
     dependent_repos_count
@@ -12,6 +11,7 @@ class ProjectSerializer < ActiveModel::Serializer
     latest_download_url
     latest_release_number
     latest_release_published_at
+    latest_stable_release
     latest_stable_release_number
     latest_stable_release_published_at
     license_normalized

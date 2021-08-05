@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class AddOwnerToPayolaSale < ActiveRecord::Migration[5.0]
   def change
     add_column :payola_sales, :owner_id, :integer

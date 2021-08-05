@@ -8,25 +8,25 @@ describe PackageManager::Maven do
   end
 
   describe "#package_link" do
-    let(:project) { create(:project, name: "com.github.jparkie:pdd", platform: described_class.formatted_name) }
+    let(:project) { create(:project, name: "com.github.jparkie:pdd", platform: described_class.name) }
 
     it "returns a link to project website" do
-      expect(described_class.package_link(project)).to eq("https://repo1.maven.org/maven2/com/github/jparkie/pdd")
+      expect(described_class.package_link(project)).to eq("http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.github.jparkie%22%20AND%20a%3A%22pdd%22")
     end
 
     it "handles version" do
-      expect(described_class.package_link(project, "2.0.0")).to eq("https://repo1.maven.org/maven2/com/github/jparkie/pdd/2.0.0/pdd-2.0.0.jar")
+      expect(described_class.package_link(project, "2.0.0")).to eq("http://search.maven.org/#artifactdetails%7Ccom.github.jparkie%7Cpdd%7C2.0.0%7Cjar")
     end
 
     context "with maven central provider" do
       let!(:version) { create(:version, project: project, repository_sources: ["Maven"], number: "2.0.0") }
 
       it "returns a link to project website" do
-        expect(described_class.package_link(project)).to eq("https://repo1.maven.org/maven2/com/github/jparkie/pdd")
+        expect(described_class.package_link(project)).to eq("http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.github.jparkie%22%20AND%20a%3A%22pdd%22")
       end
 
       it "handles version" do
-        expect(described_class.package_link(project, "2.0.0")).to eq("https://repo1.maven.org/maven2/com/github/jparkie/pdd/2.0.0/pdd-2.0.0.jar")
+        expect(described_class.package_link(project, "2.0.0")).to eq("http://search.maven.org/#artifactdetails%7Ccom.github.jparkie%7Cpdd%7C2.0.0%7Cjar")
       end
     end
 
@@ -54,33 +54,17 @@ describe PackageManager::Maven do
       end
     end
 
-    context "with jboss provider" do
-      let!(:version) { create(:version, project: project, repository_sources: [PackageManager::Maven::Jboss::REPOSITORY_SOURCE_NAME], number: "2.0.0") }
-
-      it "handles version" do
-        expect(described_class.package_link(project, "2.0.0")).to eq("https://repository.jboss.org/nexus/content/repositories/releases/com/github/jparkie/pdd/2.0.0/pdd-2.0.0.jar")
-      end
-    end
-
-    context "with jboss_ea" do
-      let!(:version) { create(:version, project: project, repository_sources: [PackageManager::Maven::JbossEa::REPOSITORY_SOURCE_NAME], number: "2.0.0") }
-
-      it "handles version" do
-        expect(described_class.package_link(project, "2.0.0")).to eq("https://repository.jboss.org/nexus/content/repositories/ea/com/github/jparkie/pdd/2.0.0/pdd-2.0.0.jar")
-      end
-    end
-
     context "with multiple providers" do
       let!(:version) { create(:version, project: project, repository_sources: ["Maven", PackageManager::Maven::SpringLibs::REPOSITORY_SOURCE_NAME], number: "2.0.0") }
 
       it "handles version" do
-        expect(described_class.package_link(project, "2.0.0")).to eq("https://repo1.maven.org/maven2/com/github/jparkie/pdd/2.0.0/pdd-2.0.0.jar")
+        expect(described_class.package_link(project, "2.0.0")).to eq("http://search.maven.org/#artifactdetails%7Ccom.github.jparkie%7Cpdd%7C2.0.0%7Cjar")
       end
     end
   end
 
   describe "#check_status_url" do
-    let(:project) { create(:project, name: "javax.faces:javax.faces-api", platform: described_class.formatted_name) }
+    let(:project) { create(:project, name: "javax.faces:javax.faces-api", platform: described_class.name) }
 
     it "returns link to maven central folder" do
       expect(described_class.check_status_url(project)).to eq("https://repo1.maven.org/maven2/javax/faces/javax.faces-api")
@@ -103,18 +87,8 @@ describe PackageManager::Maven do
     end
   end
 
-  describe ".mapping" do
-    context "with missing pom" do
-      it "should return nil" do
-        allow(described_class).to receive(:download_pom).and_raise(PackageManager::Maven::POMNotFound.new("https://a-spring-url"))
-
-        expect(described_class.mapping({group_id: "org", artifact_id: "foo", version: "1.0.0"})).to eq(nil)
-      end
-    end
-  end
-
   describe "#download_url" do
-    let(:project) { create(:project, name: "javax.faces:javax.faces-api", platform: described_class.formatted_name.demodulize) }
+    let(:project) { create(:project, name: "javax.faces:javax.faces-api", platform: described_class.name.demodulize) }
 
     it "returns link to maven central jar file" do
       expect(described_class.download_url(project.name, "2.3")).to eq("https://repo1.maven.org/maven2/javax/faces/javax.faces-api/2.3/javax.faces-api-2.3.jar")
@@ -140,14 +114,15 @@ describe PackageManager::Maven do
   describe ".project(name)" do
     it "returns the expected project data" do
       allow(described_class)
-        .to receive(:latest_version)
-        .and_return("2.3")
+        .to receive(:versions)
+        .and_return([{ number: "2.3", published_at: "2019-06-05T10:50:00Z" }])
 
       expected = {
         name: "javax.faces:javax.faces-api",
         path: "javax.faces/javax.faces-api", # This is the proper format for a maven-repository.com path component, which differs from maven.org format (dots vs slashes)
         group_id: "javax.faces",
         artifact_id: "javax.faces-api",
+        versions: [{ number: "2.3", published_at: "2019-06-05T10:50:00Z" }],
         latest_version: "2.3",
       }
 
@@ -155,30 +130,8 @@ describe PackageManager::Maven do
     end
   end
 
-  describe ".one_version" do
-    it "retrieves a single version" do
-      allow(described_class)
-        .to receive(:download_pom)
-        .and_raise(PackageManager::Maven::POMNotFound.new("https://a-maven-central-url"))
-      raw_project = {name: "org.foo:bar"}
-
-      expect(PackageManager::Maven::MavenCentral.one_version(raw_project, "1.0.0")). to eq(nil)
-    end
-
-  end
 
   describe ".versions" do
-    it "returns the expected version data" do
-      allow(described_class)
-        .to receive(:versions)
-        .and_return([{ number: "2.3", published_at: "2019-06-05T10:50:00Z" }])
-
-      project = described_class.project("javax.faces:javax.faces-api")
-      expect(described_class.versions(project, "javax.faces:javax.faces-api")).to eq([
-        { number: "2.3", published_at: "2019-06-05T10:50:00Z" }
-      ])
-    end
-
     it "skips versions that can't be parsed" do
       expect(described_class)
         .to receive(:get_raw)
@@ -356,15 +309,32 @@ describe PackageManager::Maven do
     end
   end
 
-  describe ".latest_version(names)" do
+  describe ".latest_version(versions, names)" do
     context "with versions in the project" do
       it "returns the latest version" do
-        expect(described_class)
-          .to receive(:get_raw)
-            .with("https://repo1.maven.org/maven2/com/tidelift/test/maven-metadata.xml")
-            .and_return(File.open("spec/fixtures/tidelift-maven_metadata.xml").read)
+        versions = [
+          { number: "previous", published_at: Time.parse("2019-06-04T00:00:00Z") },
+          { number: "latest", published_at: Time.parse("2019-06-04T00:00:01Z") },
+        ]
+        expect(described_class.latest_version(versions, "com.tidelift:test")).to eq("latest")
+      end
+    end
 
-        expect(described_class.latest_version("com.tidelift:test")).to eq("1.0.5")
+    context "with no versions in the project" do
+      context "with versions in the DB" do
+        it "falls back to the DB" do
+          project = create(:project, name: "com.tidelift:test", platform: "Maven")
+          create(:version, project: project, number: "1.0.0", published_at: Time.parse("2019-06-04T00:00:00Z"))
+          create(:version, project: project, number: "1.0.1", published_at: Time.parse("2019-06-04T00:00:01Z"))
+
+          expect(described_class.latest_version([], "com.tidelift:test")).to eq("1.0.1")
+        end
+      end
+
+      context "with no versions in the DB" do
+        it "returns nothing" do
+          expect(described_class.latest_version([], "com.tidelift:test")).to be_nil
+        end
       end
     end
   end

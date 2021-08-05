@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class TreeResolver
   MAX_TREE_DEPTH = 15
 

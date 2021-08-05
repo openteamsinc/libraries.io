@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 namespace :search do
   desc 'Reindex everything'
   task reindex_everything: [:reindex_repos, :reindex_issues, :reindex_projects]

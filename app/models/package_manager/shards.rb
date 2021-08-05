@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module PackageManager
   class Shards < Base
     HAS_VERSIONS = false
@@ -20,10 +19,10 @@ module PackageManager
       get("https://crystal-shards-registry.herokuapp.com/api/v1/shards/#{name}")
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project["name"],
-        repository_url: repo_fallback(raw_project["url"], nil)
+        :name => project["name"],
+        :repository_url => repo_fallback(project["url"], nil)
       }
     end
   end

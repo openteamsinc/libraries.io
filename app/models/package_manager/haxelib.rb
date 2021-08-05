@@ -34,18 +34,18 @@ module PackageManager
       get_json("http://haxelib-json.herokuapp.com/package/#{name}")
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project["name"],
-        keywords_array: raw_project["info"]["tags"],
-        description: raw_project["info"]["desc"],
-        licenses: raw_project["info"]["license"],
-        repository_url: repo_fallback(raw_project["info"]["website"], ""),
+        name: project["name"],
+        keywords_array: project["info"]["tags"],
+        description: project["info"]["desc"],
+        licenses: project["info"]["license"],
+        repository_url: repo_fallback(project["info"]["website"], ""),
       }
     end
 
-    def self.versions(raw_project, _name)
-      raw_project["info"]["versions"].map do |version|
+    def self.versions(project, _name)
+      project["info"]["versions"].map do |version|
         {
           number: version["name"],
           published_at: version["date"],
@@ -53,7 +53,7 @@ module PackageManager
       end
     end
 
-    def self.dependencies(name, version, _mapped_project)
+    def self.dependencies(name, version, _project)
       json = get_json("https://lib.haxe.org/p/#{name}/#{version}/raw-files/haxelib.json")
       return [] unless json["dependencies"]
 

@@ -1,0 +1,47 @@
+version: '3.0'
+
+volumes:
+  postgres-data:
+    driver: local
+
+  redis-data:
+    driver: local
+
+  elasticsearch-data:
+    driver: local
+
+services:
+  elasticsearch:
+    image: elasticsearch:2.4.5
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    command: -Daction.auto_create_index=true
+
+  redis:
+    image: redis:3.2.9
+    volumes:
+      - redis-data:/var/lib/redis
+    command: redis-server --appendonly yes
+
+  sidekiq: &app_base
+    build:
+      context: .
+    image: librariesio/libraries.io
+    environment:
+      - DATABASE_URL=postgresql://postgreslibio:3n49jJEanij@ot-libio-rds.chwq8pc739fe.us-west-2.rds.amazonaws.com/libio
+      - REDISCLOUD_URL=redis://redis:6379/1
+      - ELASTICSEARCH_CLUSTER_URL=elasticsearch:9200
+    volumes:
+      - .:/libraries.io
+    depends_on:
+      - elasticsearch
+      - redis
+    command: bundle exec sidekiq -C config/sidekiq.yml
+
+  web:
+    <<: *app_base
+    volumes:
+      - /home/developer:/namesFolder
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server --port 3000 --binding '0.0.0.0'"
+    ports:
+      - "3000:3000"

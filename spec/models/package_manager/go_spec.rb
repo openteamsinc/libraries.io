@@ -3,8 +3,7 @@
 require "rails_helper"
 
 describe PackageManager::Go do
-  let(:project) { create(:project, name: "foo", platform: described_class.formatted_name) }
-  let(:package_name) { "github.com/robfig/cron" }
+  let(:project) { create(:project, name: "foo", platform: described_class.name) }
 
   it 'has formatted name of "Go"' do
     expect(described_class.formatted_name).to eq("Go")
@@ -47,23 +46,23 @@ describe PackageManager::Go do
   describe "#mapping" do
     it "maps data correctly from pkg.go.dev" do
       VCR.use_cassette("pkg_go_dev") do
-        project = described_class.project(package_name)
+        project = described_class.project("github.com/urfave/cli")
         mapping = described_class.mapping(project)
+
         expect(mapping[:description].blank?).to be false
         expect(mapping[:repository_url].blank?).to be false
         expect(mapping[:homepage].blank?).to be false
+        expect(mapping[:versions].count).to be > 0
       end
     end
-  end
 
-  describe "#versions" do
     it "maps only major revision versions to module" do
       VCR.use_cassette("pkg_go_dev") do
-        project = described_class.project("#{package_name}/v3")
-        versions = described_class.versions(project, project[:name])
+        project = described_class.project("github.com/urfave/cli/v2")
+        mapping = described_class.mapping(project)
 
-        expect(versions.find { |v| v[:number] == "v1.0.0" }).to be nil
-        expect(versions.find { |v| v[:number] == "v3.0.0" }).to_not be nil
+        expect(mapping[:versions].find { |v| v[:number] == "v1.0.0" }).to be nil
+        expect(mapping[:versions].find { |v| v[:number] == "v2.0.0" }).to_not be nil
       end
     end
   end
@@ -86,76 +85,43 @@ describe PackageManager::Go do
     end
   end
 
-  describe "#one_version" do
-    it "should update an individual version" do
-      raw_project = nil
-
-      VCR.use_cassette("pkg_go_dev") do
-        raw_project = described_class.project(package_name)
-      end
-
-      VCR.use_cassette("version_update") do
-        version = described_class.one_version(raw_project, "v1.2.0")
-        expect(version[:number]).to eq "v1.2.0"
-        expect(version[:original_license]).to eq "MIT"
-        expect(version[:published_at].strftime("%m/%d/%Y")).to eq "05/05/2018"
-      end
-    end
-  end
-
   describe "#update" do
     it "should queue update for non versioned module" do
       VCR.use_cassette("pkg_go_dev") do
-        expect(PackageManagerDownloadWorker).to receive(:perform_async).with(described_class.name, package_name)
+        expect(PackageManagerDownloadWorker).to receive(:perform_async).with(described_class.name, "github.com/urfave/cli")
 
-        described_class.update("#{package_name}/v3")
+        described_class.update("github.com/urfave/cli/v2")
       end
     end
 
     it "should update both the major release module and base module" do
       VCR.use_cassette("pkg_go_dev") do
-        described_class.update(package_name)
-        non_versioned_module = Project.find_by(platform: "Go", name: package_name)
-        expect(non_versioned_module.versions.count).to eql 3
-        expect(non_versioned_module.versions.where("number like ?", "v3%").count).to eql 0
+        described_class.update("github.com/urfave/cli")
+        non_versioned_module = Project.find_by(platform: "Go", name: "github.com/urfave/cli")
+        expect(non_versioned_module.versions.count).to eql 39
+        expect(non_versioned_module.versions.where("number like ?", "v2%").count).to eql 0
         expect(non_versioned_module.versions.where("number like ?", "v1%").count).to be > 0
 
-        described_class.update("#{package_name}/v3")
-        versioned_module = Project.find_by(platform: "Go", name: "#{package_name}/v3")
+        described_class.update("github.com/urfave/cli/v2")
+        versioned_module = Project.find_by(platform: "Go", name: "github.com/urfave/cli/v2")
+        expect(versioned_module.versions.count).to eql 8
+        expect(versioned_module.versions.where("number like ?", "v2%").count).to eql 8
 
-        expect(versioned_module.versions.count).to eql 3
-        expect(versioned_module.versions.where("number like ?", "v3%").count).to eql 3
-
-        expect(non_versioned_module.versions.count).to eql 6
-        expect(non_versioned_module.versions.where("number like ?", "v3%").count).to eql 3
+        expect(non_versioned_module.versions.where("number like ?", "v2%").count).to eql 8
       end
     end
 
-    it "should use known versions if we have the license" do
-      project = create(:project, platform: "Go", name: package_name)
+    it "should use known versions" do
+      project = create(:project, platform: "Go", name: "github.com/urfave/cli")
       publish_date = Time.now
-      project.versions.create(number: "v1.2.0", published_at: publish_date, original_license: "MIT")
+      project.versions.create(number: "v1.3.0", published_at: publish_date)
 
       VCR.use_cassette("pkg_go_dev") do
-        described_class.update(package_name)
+        described_class.update("github.com/urfave/cli")
 
-        expect(project.versions.count).to eql 3
-        expect(project.versions.where("number like ?", "v1%").count).to eql 3
-        expect(project.versions.find_by(number: "v1.2.0").published_at.to_date).to eql publish_date.to_date
-      end
-    end
-
-    it "should refresh version if we do not have the license" do
-      project = create(:project, platform: "Go", name: package_name)
-      publish_date = Time.now
-      project.versions.create(number: "v1.2.0", published_at: publish_date)
-
-      VCR.use_cassette("pkg_go_dev") do
-        described_class.update(package_name)
-
-        expect(project.versions.count).to eql 3
+        expect(project.versions.count).to eql 39
         expect(project.versions.where("number like ?", "v1%").count).to be > 0
-        expect(project.versions.find_by(number: "v1.2.0").published_at.strftime("%m/%d/%Y")).to eq "05/05/2018"
+        expect(project.versions.find_by(number: "v1.3.0").published_at.to_date).to eql publish_date.to_date
       end
     end
   end

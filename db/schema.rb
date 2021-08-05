@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_07_15_100939) do
+ActiveRecord::Schema.define(version: 2021_01_06_132735) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -34,7 +34,6 @@ ActiveRecord::Schema.define(version: 2021_07_15_100939) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "authorized"
-    t.datetime "rate_limit_reset_at"
   end
 
   create_table "contributions", id: :serial, force: :cascade do |t|
@@ -401,9 +400,7 @@ ActiveRecord::Schema.define(version: 2021_07_15_100939) do
     t.jsonb "original_license"
     t.datetime "researched_at"
     t.jsonb "repository_sources"
-    t.string "status"
     t.index ["project_id", "number"], name: "index_versions_on_project_id_and_number", unique: true
-    t.index ["updated_at"], name: "index_versions_on_updated_at"
   end
 
   create_table "web_hooks", id: :serial, force: :cascade do |t|

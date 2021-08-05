@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class CreateRepositoryMaintenanceStat < ActiveRecord::Migration[5.1]
   def change
     create_table :repository_maintenance_stats do |t|

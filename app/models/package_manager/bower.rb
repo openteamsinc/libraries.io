@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module PackageManager
   class Bower < Base
     HAS_VERSIONS = false
@@ -33,15 +32,15 @@ module PackageManager
       projects[name.downcase]
     end
 
-    def self.mapping(raw_project)
-      bower_json = load_bower_json(raw_project) || raw_project
+    def self.mapping(project)
+      bower_json = load_bower_json(project) || project
       {
-        name: raw_project["name"],
-        repository_url: raw_project["url"],
-        licenses: bower_json['license'],
-        keywords_array: bower_json['keywords'],
-        homepage: bower_json["homepage"],
-        description: bower_json["description"]
+        :name => project["name"],
+        :repository_url => project["url"],
+        :licenses => bower_json['license'],
+        :keywords_array => bower_json['keywords'],
+        :homepage => bower_json["homepage"],
+        :description => bower_json["description"]
       }
     end
 

@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class RepositoryOrganisation < ApplicationRecord
   API_FIELDS = [:name, :login, :blog, :email, :location, :bio]
 
@@ -89,7 +88,7 @@ class RepositoryOrganisation < ApplicationRecord
     download_org_from_host
     download_repos
     download_members
-    update(last_synced_at: Time.now)
+    update_attributes(last_synced_at: Time.now)
   end
 
   def recently_synced?

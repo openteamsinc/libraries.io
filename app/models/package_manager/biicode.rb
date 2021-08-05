@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module PackageManager
   class Biicode < Base
     HAS_VERSIONS = true

@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module PackageManager
   class Nimble < Base
     HAS_VERSIONS = false
@@ -30,14 +29,14 @@ module PackageManager
       projects[name.downcase]
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project["name"],
-        description: raw_project["description"],
-        repository_url: repo_fallback(raw_project['url'], raw_project['web']),
-        keywords_array: Array.wrap(raw_project["tags"]),
-        licenses: raw_project['license'],
-        homepage: raw_project['web']
+        :name => project["name"],
+        :description => project["description"],
+        :repository_url => repo_fallback(project['url'],project['web']),
+        :keywords_array => Array.wrap(project["tags"]),
+        :licenses => project['license'],
+        :homepage => project['web']
       }
     end
   end

@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module RepositoryHost
   class Github < Base
     IGNORABLE_EXCEPTIONS = [
@@ -65,7 +64,7 @@ module RepositoryHost
     end
 
     def get_file_list(token = nil)
-      tree = api_client(token).tree(repository.full_name, repository.default_branch, recursive: true).tree
+      tree = api_client(token).tree(repository.full_name, repository.default_branch, :recursive => true).tree
       tree.select{|item| item.type == 'blob' }.map{|file| file.path }
     rescue *IGNORABLE_EXCEPTIONS
       nil
@@ -88,12 +87,12 @@ module RepositoryHost
         repository.full_name,
         'web',
         {
-          url: 'https://libraries.io/hooks/github',
-          content_type: 'json'
+          :url => 'https://libraries.io/hooks/github',
+          :content_type => 'json'
         },
         {
-          events: ['push', 'pull_request'],
-          active: true
+          :events => ['push', 'pull_request'],
+          :active => true
         }
       )
     rescue Octokit::UnprocessableEntity
@@ -154,10 +153,6 @@ module RepositoryHost
       api_client(token).commits(repository.full_name)
     end
 
-    def retrieve_stargazers_count(token = nil)
-      api_client(token).repository(repository.full_name).stargazers_count
-    end
-
     def download_owner
       return if repository.owner && repository.repository_user_id && repository.owner.login == repository.owner_name
       o = api_client.user(repository.owner_name)
@@ -188,7 +183,7 @@ module RepositoryHost
       if repository.readme.nil?
         repository.create_readme(contents)
       else
-        repository.readme.update(contents)
+        repository.readme.update_attributes(contents)
       end
     rescue *IGNORABLE_EXCEPTIONS
       nil
@@ -236,6 +231,10 @@ module RepositoryHost
         return []
       end
 
+      exists = !Github.fetch_repo(repository.full_name).nil?
+      repository.download_issues
+      repository.download_pull_requests
+
       # use api_client methods?
       v4_client = AuthToken.v4_client
       v3_client = AuthToken.client({auto_paginate: false})
@@ -256,8 +255,7 @@ module RepositoryHost
         Rails.logger.warn(e.message)
       end
 
-      result = MaintenanceStats::Queries::Github::IssuesQuery.new(v4_client).query(params: {owner: repository.owner_name, repo_name: repository.project_name, start_date: now})
-      metrics << MaintenanceStats::Stats::Github::IssueStats.new(result).get_stats unless check_for_v4_error_response(result)
+      metrics << MaintenanceStats::Stats::Github::DBIssueStats.new(repository.issues).get_stats if exists
 
       add_metrics_to_repo(metrics)
 

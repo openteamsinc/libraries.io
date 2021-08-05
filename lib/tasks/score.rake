@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 namespace :scores do
   task seed: :environment do
     Rails.logger.level = Logger::DEBUG

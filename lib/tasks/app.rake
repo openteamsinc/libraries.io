@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 namespace :app do
   desc 'remove private data'
   task remove_private_data: :environment do

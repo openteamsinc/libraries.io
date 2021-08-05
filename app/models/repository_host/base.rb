@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 module RepositoryHost
   class Base
     def initialize(repository)

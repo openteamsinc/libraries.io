@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class Admin::RepositoryOrganisationsController < Admin::ApplicationController
   before_action :find_user
 
@@ -22,7 +21,7 @@ class Admin::RepositoryOrganisationsController < Admin::ApplicationController
   end
 
   def update
-    @user.update(user_params)
+    @user.update_attributes(user_params)
     redirect_to admin_edit_owner_path(@user.host_type.downcase, @user.login), notice: "#{@user.org? ? 'Organisation' : 'User'} updated"
   end
 
@@ -44,7 +43,7 @@ class Admin::RepositoryOrganisationsController < Admin::ApplicationController
     @user = RepositoryUser.host(current_host).login(params[:login]).first
     @user = RepositoryOrganisation.host(current_host).login(params[:login]).first if @user.nil?
     raise ActiveRecord::RecordNotFound if @user.nil?
-    redirect_to url_for(login: @user.login), status: :moved_permanently if params[:login] != @user.login
+    redirect_to url_for(login: @user.login), :status => :moved_permanently if params[:login] != @user.login
   end
 
   def user_params

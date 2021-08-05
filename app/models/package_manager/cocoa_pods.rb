@@ -31,25 +31,23 @@ module PackageManager
     end
 
     def self.project(name)
-      versions = get_json("http://cocoapods.libraries.io/pods/#{name}.json") || {}
+      versions = get_json("http://cocoapods.libraries.io/pods/#{name}.json")
       latest_version = versions.keys.max_by { |version| version.split(".").map(&:to_i) }
-      versions.fetch(latest_version, {}).then do |v|
-        v.merge("versions" => versions) if versions.present?
-      end
+      versions[latest_version].merge("versions" => versions)
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project["name"],
-        description: raw_project["summary"],
-        homepage: raw_project["homepage"],
-        licenses: parse_license(raw_project["license"]),
-        repository_url: repo_fallback(raw_project.dig("source", "git"), ""),
+        name: project["name"],
+        description: project["summary"],
+        homepage: project["homepage"],
+        licenses: parse_license(project["license"]),
+        repository_url: repo_fallback(project["source"]["git"], ""),
       }
     end
 
-    def self.versions(raw_project, _name)
-      raw_project.fetch("versions", {}).keys.map do |v|
+    def self.versions(project, _name)
+      project["versions"].keys.map do |v|
         {
           number: v.to_s,
         }

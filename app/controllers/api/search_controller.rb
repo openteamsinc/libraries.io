@@ -1,4 +1,3 @@
-# frozen_string_literal: true
 class Api::SearchController < Api::ApplicationController
   def index
     @search = paginate search_projects(params[:q])

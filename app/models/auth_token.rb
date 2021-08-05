@@ -1,14 +1,6 @@
-# frozen_string_literal: true
 class AuthToken < ApplicationRecord
-  class RateLimitExceeded < StandardError; end
-
   validates_presence_of :token
   scope :authorized, -> { where(authorized: [true, nil]) }
-  scope :without_rate_limit_reset_at, -> { where(rate_limit_reset_at: nil) }
-  scope :resetted_rate_limit, -> { where('rate_limit_reset_at < ?', DateTime.now) }
-
-  @@auth_tokens = []
-  @token_mutex = Mutex.new
 
   def self.client(options = {})
     find_token(:v3).github_client(options)
@@ -29,8 +21,9 @@ class AuthToken < ApplicationRecord
   end
 
   def high_rate_limit?(api_version)
-    return v4_remaining_rate > 500 if api_version == :v4
-
+    if api_version == :v4
+      return v4_remaining_rate > 500
+    end
     github_client.rate_limit.remaining > 500
     rescue Octokit::Unauthorized, Octokit::AccountSuspended
       false
@@ -74,32 +67,16 @@ class AuthToken < ApplicationRecord
     # create new client with HTTP adapter set to use token and the loaded GraphQL schema
     GraphQL::Client.new(schema: Rails.application.config.graphql.schema, execute: http_adapter)
   end
+
   private
 
-  def self.available_tokens
-    authorized
-      .without_rate_limit_reset_at
-      .or(authorized.resetted_rate_limit)
-      .limit(100)
-      .to_a
-  end
-
   def self.find_token(api_version)
-    @token_mutex.synchronize do
-      loop do
-        @@auth_tokens = available_tokens if @@auth_tokens.empty?
-        number_of_available_tokens = @@auth_tokens.size
-        raise AuthToken::RateLimitExceeded if number_of_available_tokens.eql? 0
-
-        auth_token = @@auth_tokens.pop
-        if auth_token.high_rate_limit?(api_version)
-          auth_token.update(rate_limit_reset_at: nil) unless auth_token.rate_limit_reset_at.nil?
-          return auth_token
-        else
-          auth_token.update(rate_limit_reset_at: AuthToken.new_client(auth_token.token).rate_limit.resets_at)
-        end
-      end
+    return @auth_token if @auth_token && @auth_token.high_rate_limit?(api_version)
+    auth_token = authorized.order(Arel.sql("RANDOM()")).limit(100).sample
+    if auth_token.high_rate_limit?(api_version)
+      @auth_token = auth_token
     end
+    find_token(api_version)
   end
 
   def v4_remaining_rate

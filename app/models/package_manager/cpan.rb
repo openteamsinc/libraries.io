@@ -34,18 +34,19 @@ module PackageManager
       get("https://fastapi.metacpan.org/v1/release/#{name}")
     end
 
-    def self.mapping(raw_project)
+    def self.mapping(project)
       {
-        name: raw_project["distribution"],
-        homepage: raw_project.fetch("resources", {})["homepage"],
-        description: raw_project["abstract"],
-        licenses: raw_project.fetch("license", []).join(","),
-        repository_url: repo_fallback(raw_project.fetch("resources", {}).fetch("repository", {})["web"], raw_project.fetch("resources", {})["homepage"]),
+        name: project["distribution"],
+        homepage: project.fetch("resources", {})["homepage"],
+        description: project["abstract"],
+        licenses: project.fetch("license", []).join(","),
+        repository_url: repo_fallback(project.fetch("resources", {}).fetch("repository", {})["web"], project.fetch("resources", {})["homepage"]),
+        versions: versions(project, project["distribution"]),
       }
     end
 
-    def self.versions(raw_project, _name)
-      versions = get("https://fastapi.metacpan.org/v1/release/_search?q=distribution:#{raw_project['distribution']}&size=5000&fields=version,date")["hits"]["hits"]
+    def self.versions(project, _name)
+      versions = get("https://fastapi.metacpan.org/v1/release/_search?q=distribution:#{project['distribution']}&size=5000&fields=version,date")["hits"]["hits"]
       versions.map do |version|
         {
           number: version["fields"]["version"],
@@ -54,8 +55,8 @@ module PackageManager
       end
     end
 
-    def self.dependencies(_name, version, mapped_project)
-      versions = mapped_project[:versions]
+    def self.dependencies(_name, version, project)
+      versions = project[:versions]
       version_data = versions.find { |v| v["fields"]["version"] == version }
       version_data["fields"]["dependency"].select { |dep| dep["relationship"] == "requires" }.map do |dep|
         {
