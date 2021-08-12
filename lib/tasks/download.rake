@@ -201,6 +201,12 @@ namespace :download do
     PackageManager::NuGet.import_async
   end
 
+  desc "Download new NPM packages"
+  task npm_new: :environment do
+    PackageManager::NPM.import_new_async
+  end
+
+
   desc "Download recent NPM packages asynchronously"
   task npm: :environment do
     PackageManager::NPM.import_recent_async
