@@ -20,5 +20,3 @@ RUN echo $REVISION_ID > REVISION
 ENV REVISION_ID $REVISION_ID
 
 RUN RAILS_ENV=production bundle exec rake assets:precompile
-
-RUN run: bin/rails db:migrate RAILS_ENV=development
