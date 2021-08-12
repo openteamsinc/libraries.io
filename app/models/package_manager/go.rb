@@ -48,10 +48,16 @@ module PackageManager
 
     def self.project_names(since = 1.day.ago)
       # Currently the index only shows the last <=2000 package version releases from the date given. (https://proxy.golang.org/)
-      project_window = since.strftime("%FT%TZ")
-      get_raw("https://index.golang.org/index?since=#{project_window}&limit=2000")
+      cumulative = []
+      for n in 1..800 do
+        since = n.day.ago
+        project_window = since.strftime("%FT%TZ")
+        temp = get_raw("https://index.golang.org/index?since=#{project_window}&limit=2000")
         .lines
         .map { |line| JSON.parse(line)["Path"] }
+        cumulative += temp
+      end
+      cumulative.uniq
     end
 
     def self.one_version(raw_project, version_string)
