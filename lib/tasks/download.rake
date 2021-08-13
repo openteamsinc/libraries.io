@@ -252,6 +252,11 @@ namespace :download do
     PackageManager::Pypi.import_async
   end
 
+  desc 'Download new Pypi packages asynchronously'
+  tack pypi_new: :environment do
+    PackageManager::Pypi.import_new_async
+  end
+
   desc "Download recent Racket packages asynchronously"
   task racket: :environment do
     PackageManager::Racket.import_async
