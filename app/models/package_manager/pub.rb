@@ -25,12 +25,12 @@ module PackageManager
       projects = []
       loop do
         r = get("https://pub.dartlang.org/api/packages?page=#{page}")
-        break if r["packages"] == []
+        break if r.nil? || r["packages"].empty?
 
-        projects += r["packages"]
+        projects += r["packages"].map { |project| project["name"] }
         page += 1
       end
-      projects.map { |project| project["name"] }.sort
+      projects.sort
     end
 
     def self.recent_names
