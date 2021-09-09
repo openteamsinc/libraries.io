@@ -35,6 +35,11 @@ namespace :download do
     PackageManager::Bower.import_async
   end
 
+  desc "Download all Cargo packages asynchronously"
+  task cargo_all: :environment do
+    PackageManager::Cargo.import_async
+  end
+
   desc "Download recent Cargo packages asynchronously"
   task cargo: :environment do
     PackageManager::Cargo.import_recent_async
@@ -253,7 +258,7 @@ namespace :download do
   end
 
   desc 'Download new Pypi packages asynchronously'
-  tack pypi_new: :environment do
+  task pypi_new: :environment do
     PackageManager::Pypi.import_new_async
   end
 
