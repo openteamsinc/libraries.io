@@ -142,7 +142,7 @@ namespace :download do
 
   desc "Download all Hex packages"
   task hex_all: :environment do
-    PackageManager::Hex.import
+    PackageManager::Hex.import_async
   end
 
   desc "Download recent Homebrew packages asynchronously"
