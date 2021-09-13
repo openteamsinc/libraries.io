@@ -34,7 +34,7 @@ services:
     image: librariesio/libraries.io
     restart: always
     environment:
-      - DATABASE_URL=postgresql://postgreslibio:3n49jJEanij@ot-libio-rds.chwq8pc739fe.us-west-2.rds.amazonaws.com/libio
+      - DATABASE_URL=<%= ENV["DB_URL"] %>
       - REDISCLOUD_URL=redis://redis:6379/1
       - ELASTICSEARCH_CLUSTER_URL=elasticsearch:9200
     volumes:
