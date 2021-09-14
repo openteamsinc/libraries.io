@@ -191,8 +191,13 @@ namespace :download do
   end
 
   desc "Download all Nimble packages asynchronously"
-  task nimble: :environment do
+  task nimble_all: :environment do
     PackageManager::Nimble.import_async
+  end
+
+  desc "Download new Nimble packages asynchronously"
+  task nimble_new: :environment do
+    PackageManager::Nimble.import_new_async
   end
 
   desc "Download all NuGet packages asynchronously"
