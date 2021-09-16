@@ -18,7 +18,8 @@ module SourceRank
   end
 
   def source_rank
-    source_rank_breakdown.values.sum > 0 ? source_rank_breakdown.values.sum : 0
+    sum = source_rank_breakdown.values.sum
+    sum > 0 ? sum : 0
   end
 
   def source_rank_breakdown
@@ -41,8 +42,38 @@ module SourceRank
       any_outdated_dependencies:  any_outdated_dependencies? ? -1 : 0,
       is_deprecated:              is_deprecated? ? -5 : 0,
       is_unmaintained:            is_unmaintained? ? -5 : 0,
-      is_removed:                 is_removed? ? -5 : 0
+      is_removed:                 is_removed? ? -5 : 0,
+      wiki_enabled:               repository_has_wiki? ? 1 : 0,
+      fork_count:                 log_scale(repository_forks_count),
+      watchers:                   log_scale(repository_watchers_count),
+      has_contributing:           repository_has_contributing? ? 1 : 0,
+      has_coc:                    repository_has_coc? ? 1 : 0,
+      has_issues:                 repository_has_issues? ? 1 : 0
     }
+  end
+
+  def repository_has_wiki?
+    repository.try(:has_wiki)
+  end
+
+  def repository_forks_count
+    repository.try(:forks_count) || 0
+  end
+
+  def repository_watchers_count
+    repository.try(:subscribers_count) || 0
+  end
+
+  def repository_has_contributing?
+    repository.try(:has_contributing)
+  end
+
+  def repository_has_coc?
+    repository.try(:has_coc)
+  end
+
+  def repository_has_issues?
+    repository.try(:has_issues)
   end
 
   def basic_info_present?
