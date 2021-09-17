@@ -161,8 +161,13 @@ namespace :download do
   end
 
   desc "Download all Julia packages asynchronously"
-  task julia: :environment do
+  task julia_all: :environment do
     PackageManager::Julia.import_async
+  end
+
+  desc "Download all Julia packages asynchronously"
+  task julia_new: :environment do
+    PackageManager::Julia.import_new_async
   end
 
   desc "Download recent Maven packages asynchronously"
