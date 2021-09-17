@@ -45,6 +45,11 @@ namespace :download do
     PackageManager::Carthage.import_async
   end
 
+  desc "Download new Carthage packages asynchronously"
+  task carthage_new: :environment do
+    PackageManager::Carthage.import_new_async
+  end
+
   desc "Download recent Clojars packages"
   task clojars: :environment do
     PackageManager::Clojars.import_recent
