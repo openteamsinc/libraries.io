@@ -60,7 +60,7 @@ module PackageManager
 
       {
         name: raw_project["name"],
-        description: latest_version["description"]&.gsub(/\0/, ''),
+        description: sanitize_string(latest_version["description"]),
         homepage: raw_project["homepage"],
         keywords_array: Array.wrap(latest_version.fetch("keywords", [])),
         licenses: licenses(latest_version),

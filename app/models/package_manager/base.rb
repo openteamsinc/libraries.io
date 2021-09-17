@@ -289,6 +289,10 @@ module PackageManager
       { is_deprecated: false, message: nil }
     end
 
+    private_class_method def self.sanitize_string(string)
+      string&.gsub(/\0/, '')
+    end
+
     private_class_method def self.get(url, options = {})
       Oj.load(get_raw(url, options))
     end
