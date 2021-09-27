@@ -12,6 +12,6 @@ class PackageManager::Maven::Atlassian < PackageManager::Maven::Common
   end
 
   def self.recent_names
-    get("https://maven.libraries.io/atlassian/recent")
+    get("https://maven.libraries.io/atlassian/recent").map{|project| project['name']}
   end
 end

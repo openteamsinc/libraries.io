@@ -10,7 +10,7 @@ class PackageManager::Maven::MavenCentral < PackageManager::Maven::Common
   end
 
   def self.recent_names
-    get("https://maven.libraries.io/mavenCentral/recent")
+    get("https://maven.libraries.io/mavenCentral/recent").map{|project| project['name']}
   end
 
   def self.one_version(raw_project, version_string)
