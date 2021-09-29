@@ -50,14 +50,14 @@ module PackageManager
       fetch_projects_names from_date
     end
 
-    private_class_method def self.fetch_projects_names(from_date, to_date = DateTime.now)
+    private_class_method def self.fetch_projects_names(from_date)
       timestamp = from_date.strftime("%FT%TZ")
       projects_list = []
       loop do
         projects = get_raw("https://index.golang.org/index?since=#{timestamp}&limit=2000").lines.map{ |line| JSON.parse(line) }
         projects_list << projects.map{ |project| project['Path'] }
-        timestamp = projects.last['Timestamp'] rescue to_date
-        break if timestamp.to_datetime > to_date
+        break if projects.size < 2000
+        timestamp = projects&.last['Timestamp']
       end
       projects_list.flatten.uniq
     end
