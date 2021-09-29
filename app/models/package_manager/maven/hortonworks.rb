@@ -12,6 +12,6 @@ class PackageManager::Maven::Hortonworks < PackageManager::Maven::Common
   end
 
   def self.recent_names
-    get("https://maven.libraries.io/hortonworks/recent")
+    get("https://maven.libraries.io/hortonworks/recent").map{|project| project['name']}
   end
 end
