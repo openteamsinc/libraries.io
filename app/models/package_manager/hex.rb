@@ -24,9 +24,9 @@ module PackageManager
     def self.project_names
       page = 1
       projects = []
-      while page < 1000
+      loop do
         r = get("https://hex.pm/api/packages?page=#{page}")
-        break if r == []
+        break if r.nil? || r == []
 
         projects += r
         page += 1

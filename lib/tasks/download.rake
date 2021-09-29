@@ -35,6 +35,11 @@ namespace :download do
     PackageManager::Bower.import_async
   end
 
+  desc "Download all Cargo packages asynchronously"
+  task cargo_all: :environment do
+    PackageManager::Cargo.import_async
+  end
+
   desc "Download recent Cargo packages asynchronously"
   task cargo: :environment do
     PackageManager::Cargo.import_recent_async
@@ -43,6 +48,11 @@ namespace :download do
   desc "Download all Carthage packages asynchronously"
   task carthage: :environment do
     PackageManager::Carthage.import_async
+  end
+
+  desc "Download new Carthage packages asynchronously"
+  task carthage_new: :environment do
+    PackageManager::Carthage.import_new_async
   end
 
   desc "Download recent Clojars packages"
@@ -142,7 +152,7 @@ namespace :download do
 
   desc "Download all Hex packages"
   task hex_all: :environment do
-    PackageManager::Hex.import
+    PackageManager::Hex.import_async
   end
 
   desc "Download recent Homebrew packages asynchronously"
@@ -161,8 +171,13 @@ namespace :download do
   end
 
   desc "Download all Julia packages asynchronously"
-  task julia: :environment do
+  task julia_all: :environment do
     PackageManager::Julia.import_async
+  end
+
+  desc "Download all Julia packages asynchronously"
+  task julia_new: :environment do
+    PackageManager::Julia.import_new_async
   end
 
   desc "Download recent Maven packages asynchronously"
@@ -191,8 +206,13 @@ namespace :download do
   end
 
   desc "Download all Nimble packages asynchronously"
-  task nimble: :environment do
+  task nimble_all: :environment do
     PackageManager::Nimble.import_async
+  end
+
+  desc "Download new Nimble packages asynchronously"
+  task nimble_new: :environment do
+    PackageManager::Nimble.import_new_async
   end
 
   desc "Download all NuGet packages asynchronously"
@@ -200,6 +220,12 @@ namespace :download do
     PackageManager::NuGet.load_names
     PackageManager::NuGet.import_async
   end
+
+  desc "Download new NPM packages"
+  task npm_new: :environment do
+    PackageManager::NPM.import_new_async
+  end
+
 
   desc "Download recent NPM packages asynchronously"
   task npm: :environment do
@@ -244,6 +270,11 @@ namespace :download do
   desc "Download all Pypi packages asynchronously"
   task pypi_all: :environment do
     PackageManager::Pypi.import_async
+  end
+
+  desc 'Download new Pypi packages asynchronously'
+  task pypi_new: :environment do
+    PackageManager::Pypi.import_new_async
   end
 
   desc "Download recent Racket packages asynchronously"

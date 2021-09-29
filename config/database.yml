@@ -19,7 +19,7 @@ default: &default
   encoding: unicode
   # For details on connection pooling, see rails configuration guide
   # http://guides.rubyonrails.org/configuring.html#database-pooling
-  pool: 5
+  pool: 70
 
 development:
   <<: *default
@@ -81,5 +81,5 @@ test:
 #
 production:
   <<: *default
-  pool: 25
+  pool: 90
   prepared_statements: false

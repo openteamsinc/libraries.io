@@ -1,0 +1,56 @@
+version: '2.0'
+
+volumes:
+  postgres-data:
+    driver: local
+
+  redis-data:
+    driver: local
+
+  elasticsearch-data:
+    driver: local
+
+services:
+  elasticsearch:
+    image: elasticsearch:2.4.5
+    restart: always
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    command: -Daction.auto_create_index=true
+    mem_limit: 2G
+
+  redis:
+    image: redis:3.2.9
+    restart: always
+    volumes:
+      - redis-data:/var/lib/redis
+    command: redis-server --appendonly yes
+    mem_limit: 6G
+
+  sidekiq: &app_base
+    build:
+      context: .
+    image: librariesio/libraries.io
+    restart: always
+    environment:
+      - DATABASE_URL=<%= ENV["DB_URL"] %>
+      - REDISCLOUD_URL=redis://redis:6379/1
+      - ELASTICSEARCH_CLUSTER_URL=elasticsearch:9200
+    volumes:
+      - .:/libraries.io
+    depends_on:
+      - elasticsearch
+      - redis
+    command: bundle exec sidekiq -C config/sidekiq.yml
+    mem_limit: 10G
+
+  web:
+    <<: *app_base
+    volumes:
+      - /home/developer:/namesFolder
+      - .:/libraries.io
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server --port 3000 --binding '0.0.0.0'"
+    ports:
+      - "3000:3000"
+    restart: always
+    mem_limit: 2G

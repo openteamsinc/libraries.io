@@ -13,7 +13,7 @@ module PackageManager
     end
 
     def self.project_names
-      @project_names ||= `rm -rf Specs;git clone https://github.com/JuliaLang/METADATA.jl --depth 1; ls METADATA.jl`.split("\n")
+      @project_names ||= `rm -rf METADATA.jl; git clone https://github.com/JuliaLang/METADATA.jl --depth 1; ls METADATA.jl`.split("\n")
     end
 
     def self.project(name)
