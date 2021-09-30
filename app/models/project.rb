@@ -19,6 +19,7 @@ class Project < ApplicationRecord
     dependents_count
     deprecation_reason
     description
+    featured
     forks
     homepage
     keywords
@@ -108,6 +109,7 @@ class Project < ApplicationRecord
   scope :removed, -> { where('projects."status" = ?', "Removed") }
   scope :unmaintained, -> { where('projects."status" = ?', "Unmaintained") }
   scope :hidden, -> { where('projects."status" = ?', "Hidden") }
+  scope :featured, -> { where(featured: true) }
 
   scope :indexable, -> { not_removed.includes(:repository) }
 
