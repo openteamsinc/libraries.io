@@ -42,22 +42,24 @@ module PackageManager
       "go get #{project.name}"
     end
 
-    def self.recent_names
-      project_names(1.day.ago)
+    def self.project_names(from_date = '2019-01-01'.to_datetime)
+      fetch_projects_names from_date
     end
 
-    def self.project_names(since = 1.day.ago)
-      # Currently the index only shows the last <=2000 package version releases from the date given. (https://proxy.golang.org/)
-      cumulative = []
-      for n in 1..800 do
-        since = n.day.ago
-        project_window = since.strftime("%FT%TZ")
-        temp = get_raw("https://index.golang.org/index?since=#{project_window}&limit=2000")
-        .lines
-        .map { |line| JSON.parse(line)["Path"] }
-        cumulative += temp
+    def self.recent_names(from_date = 1.day.ago)
+      fetch_projects_names from_date
+    end
+
+    private_class_method def self.fetch_projects_names(from_date)
+      timestamp = from_date.strftime("%FT%TZ")
+      projects_list = []
+      loop do
+        projects = get_raw("https://index.golang.org/index?since=#{timestamp}&limit=2000").lines.map{ |line| JSON.parse(line) }
+        projects_list << projects.map{ |project| project['Path'] }
+        break if projects.size < 2000
+        timestamp = projects&.last['Timestamp']
       end
-      cumulative.uniq
+      projects_list.flatten.uniq
     end
 
     def self.one_version(raw_project, version_string)
