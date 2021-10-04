@@ -42,11 +42,15 @@ module ProjectSearch
     after_commit lambda { __elasticsearch__.delete_document rescue nil },  on: :destroy
 
     def as_indexed_json(_options = {})
-      as_json(methods: [:stars, :repo_name, :exact_name, :extra_searchable_names, :contributions_count, :dependent_repos_count]).merge(keywords_array: keywords)
+      as_json(methods: [:stars, :repo_name, :exact_name, :extra_searchable_names, :contributions_count, :dependent_repos_count, :logo_url]).merge(keywords_array: keywords)
     end
 
     def dependent_repos_count
       read_attribute(:dependent_repos_count) || 0
+    end
+
+    def logo_url
+      repository.try(:logo_url)
     end
 
     def exact_name
