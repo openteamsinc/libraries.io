@@ -15,6 +15,11 @@ Rails.application.routes.draw do
   get "/healthcheck", to: "healthcheck#index", as: :healthcheck
   get "/home", to: "dashboard#home"
 
+  namespace :fastapi, defaults: { format: :json } do
+    patch '/projects/:id/feature', to: 'projects#feature'
+    patch '/projects/:id/unfeature', to: 'projects#unfeature'
+  end
+
   namespace :api, defaults: { format: :json } do
     post "/check", to: "status#check"
 
