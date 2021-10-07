@@ -15,6 +15,11 @@ Rails.application.routes.draw do
   get "/healthcheck", to: "healthcheck#index", as: :healthcheck
   get "/home", to: "dashboard#home"
 
+  namespace :openteams, defaults: { format: :json } do
+    post '/featured_projects', to: 'featured_projects#create'
+    delete '/featured_projects/:id', to: 'featured_projects#destroy'
+  end
+
   namespace :api, defaults: { format: :json } do
     post "/check", to: "status#check"
 
