@@ -1,4 +1,4 @@
-class Fastapi::ApplicationController < ActionController::API
+class Openteams::ApplicationController < ActionController::API
   include ActionController::HttpAuthentication::Token::ControllerMethods
 
   before_action :authenticate
@@ -16,6 +16,6 @@ class Fastapi::ApplicationController < ActionController::API
   end
 
   def fast_api_token
-    ENV['FAST_API_TOKEN']
+    ENV['OPENTEAMS_API_TOKEN']
   end
 end

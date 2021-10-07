@@ -1,13 +1,13 @@
-class Fastapi::ProjectsController < Fastapi::ApplicationController
+class Openteams::FeaturedProjectsController < Openteams::ApplicationController
   before_action :find_project
 
-  def feature
+  def create
     @project.update!(featured: true)
     render json: { message: 'Project featured' }, status: :ok
   end
 
-  def unfeature
-    @project.update(featured: false)
+  def destroy
+    @project.update!(featured: false)
     render json: { message: 'Project unfeatured' }, status: :ok
   end
 
