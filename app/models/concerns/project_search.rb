@@ -42,7 +42,35 @@ module ProjectSearch
     after_commit lambda { __elasticsearch__.delete_document rescue nil },  on: :destroy
 
     def as_indexed_json(_options = {})
-      as_json(methods: [:stars, :repo_name, :exact_name, :extra_searchable_names, :contributions_count, :dependent_repos_count, :logo_url]).merge(keywords_array: keywords)
+      as_json(methods: [:stars, :repo_name, :exact_name, :extra_searchable_names, :contributions_count, :dependent_repos_count, :logo_url, :forks, :host_type, :pushed, :wiki, :pages, :subscribers, :size]).merge(keywords_array: keywords)
+    end
+
+    def size
+      repository.try(:size)
+    end
+
+    def subscribers
+      repository.try(:subscribers_count)
+    end
+
+    def pages
+      repository.try(:has_pages)
+    end
+
+    def wiki
+      repository.try(:has_wiki)
+    end
+
+    def pushed
+      repository.try(:pushed_at)
+    end
+
+    def host_type
+      repository.try(:host_type)
+    end
+
+    def forks
+      repository.try(:forks_count)
     end
 
     def dependent_repos_count
