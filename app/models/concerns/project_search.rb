@@ -35,6 +35,7 @@ module ProjectSearch
         indexes :dependents_count, type: 'integer'
         indexes :dependent_repos_count, type: 'integer'
         indexes :contributions_count, type: 'integer'
+        indexes :display_name, type: 'string', index: :not_analyzed
       end
     end
 

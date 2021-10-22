@@ -102,6 +102,7 @@ module PackageManager
       db_project = Project.find_or_initialize_by({ name: mapped_project[:name], platform: db_platform })
       db_project.reformat_repository_url if sync_version == :all && !db_project.new_record?
       db_project.attributes = mapped_project.except(:name, :releases, :versions, :version, :dependencies, :properties)
+      db_project.display_name = db_project.name.titleize
 
       begin
         db_project.save!
