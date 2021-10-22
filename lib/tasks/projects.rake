@@ -7,6 +7,12 @@ namespace :projects do
     Project.not_removed.where(last_synced_at: nil).order('updated_at ASC').limit(500).each(&:async_sync)
   end
 
+  desc 'Populate display_name'
+  task populate_display_name: :environment do
+    exit if ENV['READ_ONLY'].present?
+    Project.find_each { |project| project.update(display_name: project.name.titleize) }
+  end
+
   desc 'Update sourcerank of projects'
   task update_source_ranks: :environment do
     exit if ENV['READ_ONLY'].present?

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_09_30_200321) do
+ActiveRecord::Schema.define(version: 2021_10_21_133430) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -171,6 +171,7 @@ ActiveRecord::Schema.define(version: 2021_09_30_200321) do
     t.text "deprecation_reason"
     t.boolean "featured", default: false
     t.integer "openteams_rank", default: 0, null: false
+    t.string "display_name"
     t.index "lower((language)::text)", name: "index_projects_on_lower_language"
     t.index "lower((platform)::text), lower((name)::text)", name: "index_projects_on_platform_and_name_lower"
     t.index ["created_at"], name: "index_projects_on_created_at"
