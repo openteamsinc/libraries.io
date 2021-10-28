@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_10_21_133430) do
+ActiveRecord::Schema.define(version: 2021_10_28_133656) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -441,4 +441,11 @@ ActiveRecord::Schema.define(version: 2021_10_21_133430) do
   add_index "project_dependent_repositories", ["project_id", "rank", "stargazers_count"], name: "index_project_dependent_repos_on_rank", order: { rank: "DESC NULLS LAST", stargazers_count: :desc }
   add_index "project_dependent_repositories", ["project_id", "repository_id"], name: "index_project_dependent_repos_on_proj_id_and_repo_id", unique: true
 
+  create_view "project_dependent_versions_counts", materialized: true, sql_definition: <<-SQL
+      SELECT dependencies.project_id,
+      count(DISTINCT versions.project_id) AS versions_count
+     FROM (dependencies
+       JOIN versions ON ((versions.id = dependencies.version_id)))
+    GROUP BY dependencies.project_id;
+  SQL
 end

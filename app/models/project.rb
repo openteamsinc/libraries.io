@@ -147,7 +147,7 @@ class Project < ApplicationRecord
 
   def self.total
     Rails.cache.fetch "projects:total", expires_in: 1.day, race_condition_ttl: 2.minutes do
-      all.count
+      all.size
     end
   end
 
@@ -319,7 +319,7 @@ class Project < ApplicationRecord
   def set_dependents_count
     return if destroyed?
 
-    new_dependents_count = dependents.joins(:version).pluck(Arel.sql("DISTINCT versions.project_id")).count
+    new_dependents_count = dependent_versions_fast_count
     new_dependent_repos_count = dependent_repos_fast_count
 
     updates = {}
@@ -550,7 +550,11 @@ class Project < ApplicationRecord
   end
 
   def dependent_repos_fast_count
-    ProjectDependentRepository.where(project_id: id).count
+    ProjectDependentRepository.where(project_id: id).size
+  end
+
+  def dependent_versions_fast_count
+    ProjectDependentVersionsCount.find_by(project_id: id)&.versions_count || 0
   end
 
   def check_status(removed = false)
