@@ -448,4 +448,6 @@ ActiveRecord::Schema.define(version: 2021_10_28_133656) do
        JOIN versions ON ((versions.id = dependencies.version_id)))
     GROUP BY dependencies.project_id;
   SQL
+  add_index "project_dependent_versions_counts", ["project_id"], name: "index_project_dependent_versions_counts_on_project_id"
+
 end
