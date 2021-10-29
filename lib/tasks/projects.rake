@@ -127,6 +127,13 @@ namespace :projects do
     ProjectDependentRepository.refresh
   end
 
+  desc 'Refresh project_dependent_versions_count view'
+  task refresh_project_dependent_versions_count_view: :environment do
+    exit if ENV['READ_ONLY'].present?
+    ProjectDependentVersionsCountWorker.perform_async
+  end
+
+
   supported_platforms = ['Maven', 'npm', 'Bower', 'PyPI', 'Rubygems', 'Packagist']
 
   desc 'Create maintenance stats for projects'
