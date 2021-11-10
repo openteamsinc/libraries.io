@@ -186,7 +186,7 @@ namespace :projects do
       project = Project.find_by(platform: "Conda", name: project_name)
       if project.nil?
         PackageManager::Conda.update(project_name)
-      elsif project.versions.size != projects[project_name]["versions"].size
+      elsif project.versions.count != projects[project_name]["versions"].count
         PackageManager::Conda.update(project_name)
         LicenseBackfillWorker.perform_async("Conda", project_name)
       else
@@ -221,7 +221,7 @@ namespace :projects do
       .order(:id)
       .limit(args[:count])
 
-    if projects.size.zero?
+    if projects.count.zero?
       puts "Done!"
       exit
     else
@@ -229,11 +229,5 @@ namespace :projects do
         .each { |p| GoProjectVerificationWorker.perform_async(p.name) }
       REDIS.set("go:update:latest_updated_id", projects.last.id)
     end
-  end
-
-  desc 'Populate project groups'
-  task populate_project_groups: :environment do
-    exit if ENV['READ_ONLY'].present?
-    ProjectGroup.populate_all
   end
 end

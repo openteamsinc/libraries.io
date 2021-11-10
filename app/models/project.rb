@@ -47,7 +47,6 @@ class Project < ApplicationRecord
   validates :status, inclusion: { in: STATUSES, allow_blank: true }
 
   belongs_to :repository
-  belongs_to :project_group
   has_many :versions, dependent: :destroy
   has_many :dependencies, -> { group "project_name" }, through: :versions
   has_many :contributions, through: :repository
