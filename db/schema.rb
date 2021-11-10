@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_10_28_133656) do
+ActiveRecord::Schema.define(version: 2021_11_09_130057) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -119,6 +119,14 @@ ActiveRecord::Schema.define(version: 2021_10_28_133656) do
     t.index ["repository_id"], name: "index_manifests_on_repository_id"
   end
 
+  create_table "project_groups", force: :cascade do |t|
+    t.string "name"
+    t.bigint "repository_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["repository_id"], name: "index_project_groups_on_repository_id"
+  end
+
   create_table "project_mutes", id: :serial, force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "project_id", null: false
@@ -172,6 +180,7 @@ ActiveRecord::Schema.define(version: 2021_10_28_133656) do
     t.boolean "featured", default: false
     t.integer "openteams_rank", default: 0, null: false
     t.string "display_name"
+    t.bigint "project_group_id"
     t.index "lower((language)::text)", name: "index_projects_on_lower_language"
     t.index "lower((platform)::text), lower((name)::text)", name: "index_projects_on_platform_and_name_lower"
     t.index ["created_at"], name: "index_projects_on_created_at"
@@ -181,6 +190,7 @@ ActiveRecord::Schema.define(version: 2021_10_28_133656) do
     t.index ["normalized_licenses"], name: "index_projects_on_normalized_licenses", using: :gin
     t.index ["platform", "dependents_count"], name: "index_projects_on_platform_and_dependents_count"
     t.index ["platform", "name"], name: "index_projects_on_platform_and_name", unique: true
+    t.index ["project_group_id"], name: "index_projects_on_project_group_id"
     t.index ["repository_id"], name: "index_projects_on_repository_id"
     t.index ["status"], name: "index_projects_on_status"
     t.index ["updated_at"], name: "index_projects_on_updated_at"
@@ -422,6 +432,8 @@ ActiveRecord::Schema.define(version: 2021_10_28_133656) do
     t.index ["repository_id"], name: "index_web_hooks_on_repository_id"
   end
 
+  add_foreign_key "project_groups", "repositories"
+  add_foreign_key "projects", "project_groups"
 
   create_view "project_dependent_repositories", materialized: true, sql_definition: <<-SQL
       SELECT t1.project_id,
