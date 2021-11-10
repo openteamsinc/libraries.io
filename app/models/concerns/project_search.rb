@@ -36,6 +36,7 @@ module ProjectSearch
         indexes :dependent_repos_count, type: 'integer'
         indexes :contributions_count, type: 'integer'
         indexes :display_name, type: 'string', analyzer: 'keyword'
+        indexes :project_group, type: 'integer'
       end
     end
 
