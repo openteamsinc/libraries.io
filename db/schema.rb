@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_11_09_130057) do
+ActiveRecord::Schema.define(version: 2021_11_18_133129) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -120,10 +120,11 @@ ActiveRecord::Schema.define(version: 2021_11_09_130057) do
   end
 
   create_table "project_groups", force: :cascade do |t|
-    t.string "name"
+    t.string "project_name"
     t.bigint "repository_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "repository_url"
     t.index ["repository_id"], name: "index_project_groups_on_repository_id"
   end
 

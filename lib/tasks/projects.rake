@@ -234,6 +234,6 @@ namespace :projects do
   desc 'Populate project groups'
   task populate_project_groups: :environment do
     exit if ENV['READ_ONLY'].present?
-    ProjectGroup.populate_all
+    ProjectGroup.populate
   end
 end

@@ -1,25 +1,18 @@
-# frozen_string_literal: true:
+# frozen_string_literal: true
 class ProjectGroup < ApplicationRecord
+  IDENTIFIERS = {
+    by_repository: ProjectGroupIdentifier::Repository,
+    by_repository_url: ProjectGroupIdentifier::RepositoryUrl,
+  }.freeze
+
   belongs_to :repository
   has_many :projects, dependent: :nullify
 
-  def self.populate_all
-    data = Project
-      .where.not(repository_id: nil)
-      .pluck(:id, :repository_id)
-      .group_by { |repo| repo[1] }
-      .map { |key, value| [key, value.size, value] }
-      .select { |item| item[1] > 1 }
-      .map { |item| [item[0], item[2].transpose[0]] }
+  def self.populate(identifier = :all)
+    project_group_identifier(identifier).each(&:populate)
+  end
 
-    data.each do |item|
-      repository_id, project_ids = item
-      project_group = ProjectGroup.find_or_initialize_by(repository_id: repository_id)
-      repository = Repository.find(repository_id)
-      project_group.update!(name: repository.full_name.titleize) unless project_group.name.present?
-
-      project_ids -= project_group.project_ids
-      project_group.projects << Project.where(id: project_ids)
-    end
+  private_class_method def self.project_group_identifier(identifier)
+    [IDENTIFIERS.fetch(identifier, IDENTIFIERS.values)].flatten
   end
 end
