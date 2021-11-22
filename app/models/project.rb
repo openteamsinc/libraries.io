@@ -499,6 +499,11 @@ class Project < ApplicationRecord
     can_have_versions? ? "releases" : "tags"
   end
 
+  def check_project_group_affiliation_async
+    ProjectGroupAffiliationWorker.perform_async(id, :by_repository)
+    ProjectGroupAffiliationWorker.perform_async(id, :by_repository_url)
+  end
+
   def update_repository
     return false unless known_repository_host_name.present?
 
@@ -509,6 +514,8 @@ class Project < ApplicationRecord
       self.repository_id = r.id
       forced_save
     end
+
+    check_project_group_affiliation_async
   end
 
   def update_tags
