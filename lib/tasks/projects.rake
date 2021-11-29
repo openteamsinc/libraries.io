@@ -31,8 +31,8 @@ namespace :projects do
     exit if ENV['READ_ONLY'].present?
     ['npm', 'rubygems', 'packagist', 'nuget', 'wordpress', 'cpan', 'clojars', 'cocoapods',
     'hackage', 'cran', 'atom', 'sublime', 'pub', 'elm', 'dub'].each do |platform|
-      Project.platform(platform).not_removed.where('projects.updated_at < ?', 1.week.ago).select('id').find_each do |project|
-        CheckStatusWorker.perform_async(project.id)
+      Project.platform(platform).not_removed.where('projects.updated_at < ?', 1.week.ago).select('id').find_each.with_index do |project, index|
+        CheckStatusWorker.perform_in(index.seconds, project.id)
       end
     end
   end
