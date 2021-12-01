@@ -164,6 +164,18 @@ describe Project, type: :model do
     end
   end
 
+  describe 'check_project_group_affiliation_async' do
+    VCR.config do |c|
+      c.allow_http_connections_when_no_cassette = true
+    end
+
+    let!(:project) { create(:project) }
+
+    it "should kick off two project group affiliation jobs" do
+      expect { project.check_project_group_affiliation_async }.to change { ProjectGroupAffiliationWorker.jobs.size }.by(2)
+    end
+  end
+
   describe 'reformat_urls' do
     let!(:project) { create(:project) }
 

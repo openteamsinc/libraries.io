@@ -2,15 +2,19 @@
 
 class ProjectGroupIdentifier::Base
   def self.check_affiliation(project)
-    update_groups data_source(project)
+    individual_data_source(project)
+    extract_data
+    update_groups
   end
 
   def self.populate
-    update_groups data_source
+    bulk_data_source
+    extract_data
+    update_groups
   end
 
-  private_class_method def self.update_groups(source)
-    source.each do |group|
+  private_class_method def self.update_groups
+    @data_source.each do |group|
       attributes = group[:attributes]
 
       project_group = ProjectGroup.find_or_initialize_by(attributes)
@@ -21,12 +25,7 @@ class ProjectGroupIdentifier::Base
     end
   end
 
-  private_class_method def self.data_source(project = nil)
-    source = project ? individual_data_source(project) : bulk_data_source
-    extract_data(source)
-  end
-
-  private_class_method def self.extract_data(source)
+  private_class_method def self.extract_data
     raise NotImplementedError
   end
 

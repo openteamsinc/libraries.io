@@ -14,8 +14,6 @@ class ProjectGroup < ApplicationRecord
 
   def self.check_affiliation(project_id, identifier = :all)
     project = Project.find(project_id)
-    return unless project
-
     project_group_identifier(identifier).each { |pg| pg.check_affiliation(project) }
   end
 
