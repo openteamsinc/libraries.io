@@ -565,11 +565,15 @@ class Project < ApplicationRecord
     ProjectDependentVersionsCount.find_by(project_id: id)&.versions_count || 0
   end
 
+  def http_client
+    HttpClientCreator.create(platform)
+  end
+
   def check_status(removed = false)
     url = platform_class.check_status_url(self)
     return if url.blank?
 
-    response = Typhoeus.head(url)
+    response = http_client.head(url)
     if platform.downcase == "packagist" && response.response_code == 302
       update_attribute(:status, "Removed")
     elsif platform.downcase == "pypi" && response.response_code == 404
