@@ -566,7 +566,7 @@ class Project < ApplicationRecord
   end
 
   def http_client
-    HttpClientCreator.create(platform)
+    HttpClientCreator::Project.create(platform)
   end
 
   def check_status(removed = false)
