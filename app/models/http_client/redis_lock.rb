@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class RedisLock
+class HttpClient::RedisLock
   attr_reader :name, :value, :timeout
 
   def initialize(options = {})
@@ -10,8 +10,6 @@ class RedisLock
   end
 
   def acquire!
-    Sidekiq.redis do |r|
-      r.set(name, value, nx: true, ex: timeout)
-    end
+    Sidekiq.redis { |r| r.set(name, value, nx: true, ex: timeout) }
   end
 end

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-class HttpClientCreator
+class HttpClientCreator::Project
   DEFAULT_CLIENT = Typhoeus
   PLATFORMS = {
     base: DEFAULT_CLIENT,
-    npm: HttpClient::Npm,
+    npm: HttpClient::Npm::Project,
   }.freeze
 
   def self.create(platform = :base)
