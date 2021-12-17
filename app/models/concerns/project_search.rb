@@ -41,10 +41,10 @@ module ProjectSearch
     end
 
     after_commit lambda { __elasticsearch__.index_document if previous_changes.any? }, on: [:create, :update], prepend: true
-    after_commit lambda { __elasticsearch__.delete_document rescue nil },  on: :destroy
+    after_commit lambda { __elasticsearch__.delete_document rescue nil }, on: :destroy
 
     def as_indexed_json(_options = {})
-      as_json(methods: [:stars, :repo_name, :exact_name, :extra_searchable_names, :contributions_count, :dependent_repos_count, :logo_url, :forks, :host_type, :pushed, :wiki, :pages, :subscribers, :size]).merge(keywords_array: keywords)
+      as_json(methods: [:stars, :repo_name, :exact_name, :extra_searchable_names, :contributions_count, :dependent_repos_count, :logo_url, :forks, :host_type, :pushed, :wiki, :pages, :subscribers, :size])
     end
 
     def size
@@ -121,8 +121,8 @@ module ProjectSearch
       options[:filters] ||= []
       search_definition = {
         query: {
-          filtered: {
-            query: { match_all: {} },
+          bool: {
+            must: { match_all: {} },
             filter:{ bool: filters }
           }
         },
@@ -200,26 +200,28 @@ module ProjectSearch
         query: {
           function_score: {
             query: {
-              filtered: {
-                 query: {match_all: {}},
-                 filter:{
-                   bool: {
-                     must: [],
-                     must_not: [
-                       { term: { "status" => "Hidden" } },
-                       { term: { "status" => "Removed" } }
-                     ]
+              bool: {
+                must: {
+                  match_all: {}
+                },
+                filter: {
+                  bool: {
+                    must: [],
+                    must_not: [
+                      { term: { "status" => "Hidden" } },
+                      { term: { "status" => "Removed" } }
+                    ]
                   }
                 }
               }
             },
             field_value_factor: {
               field: "rank",
-              "modifier": "square"
+              modifier: "square",
+              missing: 1
             }
           }
         },
-        filter: { bool: { must: [] } },
       }
 
       unless options[:api]
@@ -242,20 +244,20 @@ module ProjectSearch
         end
       end
 
-      search_definition[:sort]  = { (options[:sort] || '_score') => (options[:order] || 'desc') }
-      search_definition[:query][:function_score][:query][:filtered][:filter][:bool][:must] = filter_format(options[:filters])
+      search_definition[:sort] = { (options[:sort] || '_score') => (options[:order] || 'desc') }
+      search_definition[:query][:function_score][:query][:bool][:filter][:bool][:must] = filter_format(options[:filters])
 
       if query.present?
-        search_definition[:query][:function_score][:query][:filtered][:query] = query_options(query, FIELDS)
+        search_definition[:query][:function_score][:query][:bool][:must] = query_options(query, FIELDS)
       elsif options[:sort].blank?
-        search_definition[:sort]  = [{'rank' => 'desc'}, {'stars' => 'desc'}]
+        search_definition[:sort] = [{ 'rank' => 'desc' }, { 'stars' => 'desc' }]
       end
 
       if options[:prefix].present?
-        search_definition[:query][:function_score][:query][:filtered][:query] = {
-          prefix: { exact_name: original_query }
+        search_definition[:query][:function_score][:query][:bool][:must] = {
+          prefix: { exact_name: original_query },
         }
-        search_definition[:sort]  = [{'rank' => 'desc'}, {'stars' => 'desc'}]
+        search_definition[:sort] = [{ 'rank' => 'desc' }, { 'stars' => 'desc' }]
       end
 
       __elasticsearch__.search(search_definition)
@@ -268,7 +270,7 @@ module ProjectSearch
           fields: fields,
           fuzziness: 1.2,
           slop: 2,
-          type: 'cross_fields',
+          type: 'most_fields',
           operator: 'and'
         }
       }
@@ -276,7 +278,7 @@ module ProjectSearch
 
     def self.filter_format(filters, except = nil)
       filters.select { |k, v| v.present? && k != except }.map do |k, v|
-        Array(v).map { { terms: { k => v.split(',') } } }
+        { terms: { "#{k}.keyword" => v.split(',').first } }
       end
     end
 
@@ -285,7 +287,7 @@ module ProjectSearch
         aggs: {
           name.to_s => {
             terms: {
-              field: name.to_s,
+              field: "#{name.to_s}.keyword",
               size: limit
             }
           }
