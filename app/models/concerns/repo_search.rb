@@ -5,7 +5,7 @@ module RepoSearch
   included do
     include Elasticsearch::Model
 
-    index_name    "repositories-#{Rails.env}"
+    index_name "repositories-#{Rails.env}"
 
     FIELDS = ['full_name^2', 'exact_name^2', 'description', 'homepage', 'language', 'license']
 
@@ -40,7 +40,7 @@ module RepoSearch
     end
 
     after_commit lambda { __elasticsearch__.index_document if previous_changes.any? }, on: [:create, :update], prepend: true
-    after_commit lambda { __elasticsearch__.delete_document rescue nil },  on: :destroy
+    after_commit lambda { __elasticsearch__.delete_document rescue nil }, on: :destroy
 
     def self.facets(options = {})
       Rails.cache.fetch "repo_facet:#{options.to_s.gsub(/\W/, '')}", expires_in: 1.hour, race_condition_ttl: 2.minutes do
@@ -68,52 +68,33 @@ module RepoSearch
         query: {
           function_score: {
             query: {
-              filtered: {
-                 query: {match_all: {}},
-                 filter:{
-                   bool: {
-                     must: [],
-                     must_not: [
-                       {
-                         term: {
-                          "fork" => true
-                         }
-                       },
-                       {
-                         term: {
-                          "private" => true
-                         }
-                       },
-                       {
-                         term: {
-                           "status" => "Removed"
-                         }
-                       },
-                       {
-                         term: {
-                           "status" => "Hidden"
-                          }
-                       },
-                     ]
+              bool: {
+                must: { match_all: {} },
+                filter: {
+                  bool: {
+                    must: [],
+                    must_not: [
+                      { term: { "fork" => true } },
+                      { term: { "private" => true } },
+                      { term: { "status" => "Removed" } },
+                      { term: { "status" => "Hidden"  } },
+                    ]
                   }
                 }
               }
             },
             field_value_factor: {
               field: "rank",
-              "modifier": "square"
+              modifier: "square",
+              missing: 1
             }
           }
         },
-        filter: {
-          bool: {
-            must_not: options[:must_not]
-          }
-        }
       }
 
       unless options[:api]
         unless options[:no_facet]
+          options[:filters]&.transform_values! { |v| (v && !v.is_a?(Array)) ? [v] : v }
           search_definition[:aggs] = {
             language: Project.facet_filter(:language, facet_limit, options),
             license: Project.facet_filter(:license, facet_limit, options),
@@ -134,13 +115,13 @@ module RepoSearch
         end
       end
 
-      search_definition[:sort]  = { (options[:sort] || '_score') => (options[:order] || 'desc') }
-      search_definition[:query][:function_score][:query][:filtered][:filter][:bool][:must] = Project.filter_format(options[:filters])
+      search_definition[:sort] = { (options[:sort] || '_score') => (options[:order] || 'desc') }
+      search_definition[:query][:function_score][:query][:bool][:filter][:bool][:must] = Project.filter_format(options[:filters])
 
       if query.present?
-        search_definition[:query][:function_score][:query][:filtered][:query] = Project.query_options(query, FIELDS)
+        search_definition[:query][:function_score][:query][:bool][:must] = Project.query_options(query, FIELDS)
       elsif options[:sort].blank?
-        search_definition[:sort]  = [{'rank' => 'desc'}, {'stargazers_count' => 'desc'}]
+        search_definition[:sort] = [{ 'rank' => 'desc' }, { 'stargazers_count' => 'desc' }]
       end
 
       __elasticsearch__.search(search_definition)
