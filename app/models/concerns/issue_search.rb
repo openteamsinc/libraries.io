@@ -42,14 +42,14 @@ module IssueSearch
 
       search_definition = {
         query: {
-          filtered: {
-             query: {match_all: {}},
-             filter: {
-               bool: {
-                 must: [ { "term": { "state": "open"}}, { "term": { "locked": false}} ],
-                 must_not: [ { term: { "labels": "wontfix" } } ],
-               }
-             }
+          bool: {
+            must: { match_all: {} },
+            filter: {
+              bool: {
+                must: [{ "term": { "state": "open"}}, { "term": { "locked": false } }],
+                must_not: [{ term: { "labels": "wontfix" } }],
+              }
+            }
           }
         },
         aggs: issues_facet_filters(options, options[:labels_to_keep]),
@@ -58,7 +58,7 @@ module IssueSearch
       }
       search_definition[:filter][:bool][:must] = filter_format(options[:filters]) if options[:filters].any?
       if options[:repo_ids].present?
-        search_definition[:query][:filtered][:filter][:bool][:must] << {
+        search_definition[:query][:bool][:filter][:bool][:must] << {
           terms: { "repository_id": options[:repo_ids] } }
       end
       __elasticsearch__.search(search_definition)
@@ -80,17 +80,17 @@ module IssueSearch
 
       search_definition = {
         query: {
-          filtered: {
-             query: {match_all: {}},
-             filter: {
-               bool: {
-                 must: [ { "term": { "state": "open"}}, { "term": { "locked": false}} ],
-                 must_not: [ { term: { "labels": "wontfix" } } ],
-                 should: Issue::FIRST_PR_LABELS.map do |label|
-                   { term: { "labels": label } }
-                 end
-               }
-             }
+          bool: {
+            must: { match_all: {} },
+            filter: {
+              bool: {
+                must: [{ "term": { "state": "open"}}, { "term": { "locked": false } }],
+                must_not: [ { term: { "labels": "wontfix" } } ],
+                should: Issue::FIRST_PR_LABELS.map do |label|
+                  { term: { "labels": label } }
+                end
+              }
+            }
           }
         },
         aggs: issues_facet_filters(options, Issue::FIRST_PR_LABELS),
