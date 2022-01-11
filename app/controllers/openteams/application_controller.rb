@@ -6,7 +6,7 @@ class Openteams::ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordNotFound do |e|
     render json: { error: e.to_s }, status: :not_found
   end
-  
+
   private
 
   def authenticate
@@ -17,5 +17,13 @@ class Openteams::ApplicationController < ActionController::API
 
   def fast_api_token
     ENV['OPENTEAMS_API_TOKEN']
+  end
+
+  def find_project
+    @project = Project.find(project_id)
+  end
+
+  def project_id
+    params.require(:id)
   end
 end

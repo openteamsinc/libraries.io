@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_11_18_133129) do
+ActiveRecord::Schema.define(version: 2022_01_11_101648) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -182,6 +182,8 @@ ActiveRecord::Schema.define(version: 2021_11_18_133129) do
     t.integer "openteams_rank", default: 0, null: false
     t.string "display_name"
     t.bigint "project_group_id"
+    t.string "youtube_url"
+    t.string "twitter_url"
     t.index "lower((language)::text)", name: "index_projects_on_lower_language"
     t.index "lower((platform)::text), lower((name)::text)", name: "index_projects_on_platform_and_name_lower"
     t.index ["created_at"], name: "index_projects_on_created_at"
