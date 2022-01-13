@@ -18,6 +18,8 @@ Rails.application.routes.draw do
   namespace :openteams, defaults: { format: :json } do
     post '/featured_projects', to: 'featured_projects#create'
     delete '/featured_projects/:id', to: 'featured_projects#destroy'
+
+    put '/projects/:id', to: 'projects#update'
   end
 
   namespace :api, defaults: { format: :json } do

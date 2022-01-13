@@ -10,10 +10,4 @@ class Openteams::FeaturedProjectsController < Openteams::ApplicationController
     @project.update!(featured: false)
     render json: { message: 'Project unfeatured' }, status: :ok
   end
-
-  private
-
-  def find_project
-    @project = Project.find(params[:id])
-  end
 end
