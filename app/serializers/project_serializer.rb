@@ -25,6 +25,8 @@ class ProjectSerializer < ActiveModel::Serializer
     repository_url
     stars
     status
+    youtube_url
+    twitter_url
   ]
 
   has_many :versions
