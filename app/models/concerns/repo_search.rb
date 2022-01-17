@@ -11,17 +11,17 @@ module RepoSearch
 
     settings index: { number_of_shards: 3, number_of_replicas: 1 } do
       mapping do
-        indexes :full_name, type: 'string', analyzer: 'snowball', boost: 6
-        indexes :exact_name, type: 'string', index: :not_analyzed, boost: 2
+        indexes :full_name, type: 'text', analyzer: 'snowball', boost: 6
+        indexes :exact_name, type: 'text', analyzer: 'snowball', boost: 2
 
-        indexes :description, type: 'string', analyzer: 'snowball'
-        indexes :homepage, type: 'string'
-        indexes :language, type: 'string', index: :not_analyzed
-        indexes :license, type: 'string', index: :not_analyzed
-        indexes :keywords, type: 'string', index: :not_analyzed
-        indexes :host_type, type: 'string', index: :not_analyzed
+        indexes :description, type: 'text', analyzer: 'snowball'
+        indexes :homepage, type: 'text'
+        indexes :language, type: 'text', analyzer: 'keyword'
+        indexes :license, type: 'text', analyzer: 'snowball'
+        indexes :keywords, type: 'text', index: :false
+        indexes :host_type, type: 'text', index: :false
 
-        indexes :status, type: 'string', index: :not_analyzed
+        indexes :status, type: 'text', analyzer: 'keyword'
 
         indexes :created_at, type: 'date'
         indexes :updated_at, type: 'date'
@@ -94,7 +94,7 @@ module RepoSearch
 
       unless options[:api]
         unless options[:no_facet]
-          options[:filters]&.transform_values! { |v| (v && !v.is_a?(Array)) ? [v] : v }
+          options[:filters]&.map! { |v| (v && !v.is_a?(Array)) ? [v] : v }
           search_definition[:aggs] = {
             language: Project.facet_filter(:language, facet_limit, options),
             license: Project.facet_filter(:license, facet_limit, options),
