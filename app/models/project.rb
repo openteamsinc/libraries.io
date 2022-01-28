@@ -7,6 +7,7 @@ class Project < ApplicationRecord
   include SourceRank
   include Status
   include Releases
+  include Percentile
 
   include GithubProject
   include GitlabProject
