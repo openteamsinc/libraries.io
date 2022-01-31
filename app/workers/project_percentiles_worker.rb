@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class ProjectUpdatePercentileWorker
+class ProjectPercentilesWorker
   include Sidekiq::Worker
   sidekiq_options queue: :score, unique: :until_executed
 
