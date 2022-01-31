@@ -42,7 +42,7 @@ class PercentileCalculator
   def update_percentiles
     fields.each do |field|
       ids[field].each do |rank, ids|
-       Project.where(id: ids).update_all(PercentileCalculator.field_percentile_name(field) => percentiles[field][rank])
+        ProjectUpdatePercentilesWorker.perform_async(ids, PercentileCalculator.field_percentile_name(field) => percentiles[field][rank])
       end
     end
     self
