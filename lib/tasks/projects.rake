@@ -40,7 +40,7 @@ namespace :projects do
   desc 'Update projects rank and score percentiles'
   task update_percentiles: :environment do
     exit if ENV['READ_ONLY'].present?
-    ProjectUpdatePercentileWorker.perform_async
+    ProjectPercentilesWorker.perform_async
   end
 
   desc 'Update project repositories'
