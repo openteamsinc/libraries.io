@@ -55,30 +55,7 @@ namespace :github do
   desc 'Download all github users'
   task download_all_users: :environment do
     exit if ENV['READ_ONLY'].present?
-    since = REDIS.get('githubuserid').to_i
-
-    while true
-      users = AuthToken.client(auto_paginate: false).all_users(since: since)
-      users.each do |o|
-        begin
-          if o.type == "Organization"
-            RepositoryOrganisation.where(host_type:'GitHub').find_or_create_by(uuid: o.id) do |u|
-              u.login = o.login
-            end
-          else
-            RepositoryUser.create_from_host('GitHub', o)
-          end
-        rescue
-          nil
-        end
-      end
-      since = users.last.id + 1
-      REDIS.set('githubuserid', since)
-      puts '*'*20
-      puts "#{since} - #{'%.4f' % (since.to_f/250000)}%"
-      puts '*'*20
-      sleep 0.5
-    end
+    GithubUsersWorker.perform_async
   end
 
   desc 'Update Github V4 API Schema File'
