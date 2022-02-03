@@ -2,7 +2,7 @@
 
 class PackageManagerDownloadWorker
   include Sidekiq::Worker
-  sidekiq_options queue: :critical
+  sidekiq_options queue: :critical, unique: :until_executed
 
   PLATFORMS = {
     alcatraz: PackageManager::Alcatraz,
