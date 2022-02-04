@@ -6,9 +6,9 @@ class GithubDownloadUsersWorker
 
   def perform(users)
     users.each do |user|
-      if user.type == "Organization"
-        RepositoryOrganisation.where(host_type: "GitHub").find_or_create_by(uuid: user.id) do |db_user|
-          db_user.login = user.login
+      if user[:type] == "Organization"
+        RepositoryOrganisation.where(host_type: "GitHub").find_or_create_by(uuid: user[:id]) do |db_user|
+          db_user.login = user[:login]
         end
       else
         RepositoryUser.create_from_host("GitHub", user)
