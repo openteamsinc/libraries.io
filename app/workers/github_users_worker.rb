@@ -7,10 +7,10 @@ class GithubUsersWorker
   def perform
     redis_key = "githubuserid"
     since = REDIS.get(redis_key).to_i
-    loop do
-      users = AuthToken.client(auto_paginate: false).all_users(since: since)
-      GithubDownloadUsersWorker.perform_async(users)
-      since = users.last.id + 1
+    10.times.with_index do |index|
+      users = AuthToken.client(auto_paginate: false).all_users(since: since).map(&:to_h)
+      GithubDownloadUsersWorker.perform_at(index.hour, users)
+      since = users.last[:id].to_i + 1
       REDIS.set(redis_key, since)
     end
   end
