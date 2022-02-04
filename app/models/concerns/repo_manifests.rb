@@ -65,6 +65,8 @@ module RepoManifests
         })
       end
     end
+  rescue NoMethodError => e
+    Rails.logger.error e.message
   end
 
   def delete_old_manifests(new_manifests)
