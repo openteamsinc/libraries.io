@@ -65,8 +65,8 @@ module RepositoryOwner
       response = Typhoeus.head(repository_url)
 
       if response.response_code == 404
-        owner.repositories.each do |repo|
-          CheckRepoStatusWorker.perform_async(repo.host_type, repo.full_name)
+        owner.repositories.pluck(:host_type, :full_name).each do |repo_host_type, repo_full_name|
+          CheckRepoStatusWorker.perform_async(repo_host_type, repo_full_name)
         end
         owner.destroy
       end

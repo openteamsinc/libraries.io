@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_01_26_170810) do
+ActiveRecord::Schema.define(version: 2022_02_10_092558) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -275,6 +275,7 @@ ActiveRecord::Schema.define(version: 2022_01_26_170810) do
     t.index "lower((host_type)::text), lower((full_name)::text)", name: "index_repositories_on_lower_host_type_lower_full_name", unique: true
     t.index "lower((language)::text)", name: "github_repositories_lower_language"
     t.index ["fork"], name: "index_repositories_on_fork"
+    t.index ["full_name"], name: "index_repositories_on_full_name"
     t.index ["host_type", "full_name"], name: "index_repositories_on_host_type_and_full_name"
     t.index ["host_type", "uuid"], name: "index_repositories_on_host_type_and_uuid", unique: true
     t.index ["private"], name: "index_repositories_on_private"
@@ -326,6 +327,7 @@ ActiveRecord::Schema.define(version: 2022_01_26_170810) do
     t.index ["created_at"], name: "index_repository_organisations_on_created_at"
     t.index ["hidden"], name: "index_repository_organisations_on_hidden"
     t.index ["host_type", "uuid"], name: "index_repository_organisations_on_host_type_and_uuid", unique: true
+    t.index ["login", "host_type"], name: "index_repository_organisations_on_login_and_host_type"
   end
 
   create_table "repository_permissions", id: :serial, force: :cascade do |t|
