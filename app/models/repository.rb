@@ -278,9 +278,8 @@ class Repository < ApplicationRecord
       repo = Repository.includes(:projects).find_by_full_name(repo_full_name)
       if repo
         status = removed ? nil : 'Removed'
-        repo.update_attribute(:status, status) if !repo.private?
-        repo.projects.each do |project|
-          next unless ['bower', 'go', 'elm', 'alcatraz', 'julia', 'nimble'].include?(project.platform.downcase)
+        repo.update_attribute(:status, status) unless repo.private?
+        repo.projects.where("lower(:platform) IN (?)", %w[bower go elm alcatraz julia nimble]).each do |project|
           project.update_attribute(:status, status)
         end
       end
