@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_02_10_092558) do
+ActiveRecord::Schema.define(version: 2022_02_10_153748) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -193,10 +193,14 @@ ActiveRecord::Schema.define(version: 2022_02_10_092558) do
     t.index ["featured"], name: "index_projects_on_featured"
     t.index ["keywords_array"], name: "index_projects_on_keywords_array", using: :gin
     t.index ["normalized_licenses"], name: "index_projects_on_normalized_licenses", using: :gin
+    t.index ["platform", "dependent_repos_count"], name: "index_projects_on_platform_and_dependent_repos_count"
     t.index ["platform", "dependents_count"], name: "index_projects_on_platform_and_dependents_count"
+    t.index ["platform", "id"], name: "index_projects_on_platform_and_id"
     t.index ["platform", "name"], name: "index_projects_on_platform_and_name", unique: true
     t.index ["project_group_id"], name: "index_projects_on_project_group_id"
     t.index ["repository_id"], name: "index_projects_on_repository_id"
+    t.index ["repository_url"], name: "index_projects_on_repository_url"
+    t.index ["score"], name: "index_projects_on_score"
     t.index ["status"], name: "index_projects_on_status"
     t.index ["updated_at"], name: "index_projects_on_updated_at"
     t.index ["versions_count"], name: "index_projects_on_versions_count"
