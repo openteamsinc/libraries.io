@@ -23,7 +23,6 @@ class Repository < ApplicationRecord
   has_many :manifests, dependent: :destroy
   has_many :repository_dependencies
   has_many :repository_maintenance_stats, dependent: :destroy
-  has_many :dependencies, through: :manifests, source: :repository_dependencies
   has_many :dependency_projects, -> { group('projects.id').order(Arel.sql("COUNT(projects.id) DESC")) }, through: :dependencies, source: :project
   has_many :dependency_repos, -> { group('repositories.id') }, through: :dependency_projects, source: :repository
 
@@ -90,6 +89,10 @@ class Repository < ApplicationRecord
            :formatted_host, :get_file_list, :get_file_contents, :issues_url,
            :source_url, :contributors_url, :blob_url, :raw_url, :commits_url,
            :compare_url, :download_pull_requests, :retrieve_commits, :gather_maintenance_stats, to: :repository_host
+
+  def dependencies
+    RepositoryDependency.where(manifest_id: manifests.pluck(:id))
+  end
 
   def self.language(language)
     where('lower(repositories.language) = ?', language.try(:downcase))
