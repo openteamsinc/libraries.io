@@ -10,9 +10,9 @@ RailsPerformance.setup do |config|
   config.mount_at = '/rails/performance'
 
   # protect your Performance Dashboard with HTTP BASIC password
-  config.http_basic_authentication_enabled = false
-  config.http_basic_authentication_user_name = 'rails_performance'
-  config.http_basic_authentication_password = 'password12'
+  config.http_basic_authentication_enabled = true
+  config.http_basic_authentication_user_name = ENV["RAILS_PERFORMANCE_USERNAME"]
+  config.http_basic_authentication_password = ENV["RAILS_PERFORMANCE_PASSWORD"]
 
   # if you need an additional rules to check user permissions
   config.verify_access_proc = proc { |controller| true }
