@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_02_10_153748) do
+ActiveRecord::Schema.define(version: 2022_02_17_185109) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -184,6 +184,9 @@ ActiveRecord::Schema.define(version: 2022_02_10_153748) do
     t.bigint "project_group_id"
     t.string "youtube_url"
     t.string "twitter_url"
+    t.integer "rank_percentile"
+    t.integer "score_percentile"
+    t.text "docs"
     t.index "lower((language)::text)", name: "index_projects_on_lower_language"
     t.index "lower((platform)::text), lower((name)::text)", name: "index_projects_on_platform_and_name_lower"
     t.index ["created_at"], name: "index_projects_on_created_at"
