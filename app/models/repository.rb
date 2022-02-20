@@ -282,7 +282,7 @@ class Repository < ApplicationRecord
       if repo
         status = removed ? nil : 'Removed'
         repo.update_attribute(:status, status) unless repo.private?
-        repo.projects.where("lower(:platform) IN (?)", %w[bower go elm alcatraz julia nimble]).each do |project|
+        repo.projects.where("lower(projects.platform) IN (?)", %w[bower go elm alcatraz julia nimble]).each do |project|
           project.update_attribute(:status, status)
         end
       end
