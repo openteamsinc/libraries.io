@@ -95,6 +95,7 @@ gem "yajl-ruby"
 group :development do
   gem "brakeman", require: false
   gem "pry-rails"
+  gem "rails_performance"
   gem "spring"
   gem "spring-watcher-listen"
   gem "sql_queries_count"

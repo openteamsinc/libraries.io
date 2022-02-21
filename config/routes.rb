@@ -12,6 +12,8 @@ Rails.application.routes.draw do
 
   mount PgHero::Engine, at: "pghero"
 
+  mount RailsPerformance::Engine, at: 'rails/performance'
+
   get "/healthcheck", to: "healthcheck#index", as: :healthcheck
   get "/home", to: "dashboard#home"
 
