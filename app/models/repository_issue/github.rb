@@ -30,7 +30,8 @@ module RepositoryIssue
       i.pull_request = issue_hash[:pull_request].present?
       i.comments_count = issue_hash[:comments]
       i.host_type = 'GitHub'
-      i.assign_attributes issue_hash.slice(:number, :state, :title, :body, :locked, :closed_at, :created_at, :updated_at)
+      i.body = issue_hash[:body]&.gsub(/\0/, '')
+      i.assign_attributes issue_hash.slice(:number, :state, :title, :locked, :closed_at, :created_at, :updated_at)
       if i.changed?
         i.last_synced_at = Time.now
         i.save!
