@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_02_17_185109) do
+ActiveRecord::Schema.define(version: 2022_02_23_122437) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_stat_statements"
@@ -104,6 +104,7 @@ ActiveRecord::Schema.define(version: 2022_02_17_185109) do
     t.integer "repository_user_id"
     t.index ["last_synced_at"], name: "index_issues_on_last_synced_at"
     t.index ["repository_id", "uuid"], name: "index_issues_on_repository_id_and_uuid"
+    t.index ["uuid"], name: "index_issues_on_uuid"
   end
 
   create_table "manifests", id: :serial, force: :cascade do |t|
@@ -378,6 +379,7 @@ ActiveRecord::Schema.define(version: 2022_02_17_185109) do
     t.index ["hidden", "last_synced_at"], name: "index_repository_users_on_hidden_and_last_synced_at"
     t.index ["hidden"], name: "index_repository_users_on_hidden"
     t.index ["host_type", "uuid"], name: "index_repository_users_on_host_type_and_uuid", unique: true
+    t.index ["uuid"], name: "index_repository_users_on_uuid"
   end
 
   create_table "subscriptions", id: :serial, force: :cascade do |t|
