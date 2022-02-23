@@ -522,15 +522,7 @@ class Project < ApplicationRecord
   def update_tags
     return unless repository
 
-    benchmark = nil
-
-    qcount = QueryCounter.count do
-      benchmark = Benchmark.measure do
-        repository.download_tags
-      end
-    end
-
-    Rails.logger.info("Project#update_tags platform=#{platform.downcase} name=#{name} qcount=#{qcount} benchmark:#{(benchmark.real * 1000).round(2)}ms")
+    repository.download_tags
   rescue StandardError => e
     Rails.logger.error("Project#update_tags error #{e.inspect}")
     nil
