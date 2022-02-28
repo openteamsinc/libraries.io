@@ -9,6 +9,6 @@ class Openteams::ProjectsController < Openteams::ApplicationController
   private
 
   def project_params
-    params.require(:project).permit(:display_name, :youtube_url, :twitter_url, :docs)
+    params.require(:project).permit(:display_name, :youtube_url, :twitter_url, :docs, :docs_url)
   end
 end
