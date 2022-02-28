@@ -28,13 +28,13 @@ module PackageManager
 
     def self.mapping(raw_project)
       current_release = raw_project["current_release"]
-      metadata = current_release["metadata"]
+      metadata = current_release&.fetch("metadata", {})
       {
-        name: raw_project["slug"],
-        repository_url: metadata["source"],
-        description: metadata["description"],
-        keywords_array: current_release["tags"],
-        licenses: metadata["license"],
+        name: raw_project&.fetch("slug"),
+        repository_url: metadata&.fetch("source", nil),
+        description: metadata&.fetch("description", nil),
+        keywords_array: current_release&.fetch("tags", nil),
+        licenses: metadata&.fetch("license", nil),
       }
     end
 
