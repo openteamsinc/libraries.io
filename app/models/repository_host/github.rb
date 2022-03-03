@@ -135,7 +135,7 @@ module RepositoryHost
     def download_issues(token = nil)
       issues = api_client(token).search_issues("repo:#{repository.full_name} type:issue").items
       issues.each do |issue|
-        RepositoryIssue::Github.create_from_hash(repository.full_name, issue, token)
+        RepositoryIssue::Github.create_from_hash(repository.full_name, issue, token, repository.id)
       end
     rescue *IGNORABLE_EXCEPTIONS
       nil
