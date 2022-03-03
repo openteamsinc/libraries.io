@@ -17,12 +17,14 @@ module RepositoryIssue
       nil
     end
 
-    def self.create_from_hash(name_with_owner, issue_hash, token = nil)
+    def self.create_from_hash(name_with_owner, issue_hash, token = nil, repository_id = nil)
       return if issue_hash.nil?
 
       issue_hash = issue_hash.to_hash
-      repository_id = Rails.cache.fetch("repository-#{name_with_owner}", expires_in: 15.minutes) do
-        Repository.host("GitHub").find_by_full_name(name_with_owner)&.id || RepositoryHost::Github.create(name_with_owner)&.id
+      unless repository_id
+        repository_id = Rails.cache.fetch("repository-#{name_with_owner}", expires_in: 15.minutes) do
+          Repository.host("GitHub").find_by_full_name(name_with_owner)&.id || RepositoryHost::Github.create(name_with_owner)&.id
+        end
       end
       return unless repository_id
 
