@@ -1,0 +1,64 @@
+Starting librariesio_elasticsearch_1 ... 
+Starting librariesio_redis_1         ... 
+[1A[2KStarting librariesio_redis_1         ... [32mdone[0m[1B[2A[2KStarting librariesio_elasticsearch_1 ... [32mdone[0m[2B[!!!] Index does not exist (Elasticsearch::Transport::Transport::Errors::NotFound)
+rake aborted!
+Elasticsearch::Transport::Transport::Errors::NotAcceptable: [406] {"error":"Content-Type header [] is not supported","status":406}
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/base.rb:202:in `__raise_transport_error'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/base.rb:313:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/http/faraday.rb:20:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/client.rb:128:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-api-2.0.2/lib/elasticsearch/api/namespace/common.rb:21:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-api-2.0.2/lib/elasticsearch/api/actions/indices/create.rb:84:in `create'
+/usr/local/bundle/gems/elasticsearch-model-5.0.0/lib/elasticsearch/model/indexing.rb:232:in `create_index!'
+/libraries.io/lib/tasks/search.rake:22:in `block (2 levels) in <main>'
+/usr/local/bundle/gems/rake-13.0.3/exe/rake:27:in `<top (required)>'
+Tasks: TOP => search:recreate_issues_index
+(See full trace by running task with --trace)
+Starting librariesio_redis_1 ... 
+Starting librariesio_elasticsearch_1 ... 
+[2A[2KStarting librariesio_redis_1         ... [32mdone[0m[2B[1A[2KStarting librariesio_elasticsearch_1 ... [32mdone[0m[1B[!!!] Index does not exist (Elasticsearch::Transport::Transport::Errors::NotFound)
+rake aborted!
+Elasticsearch::Transport::Transport::Errors::NotAcceptable: [406] {"error":"Content-Type header [] is not supported","status":406}
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/base.rb:202:in `__raise_transport_error'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/base.rb:313:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/http/faraday.rb:20:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/client.rb:128:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-api-2.0.2/lib/elasticsearch/api/namespace/common.rb:21:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-api-2.0.2/lib/elasticsearch/api/actions/indices/create.rb:84:in `create'
+/usr/local/bundle/gems/elasticsearch-model-5.0.0/lib/elasticsearch/model/indexing.rb:232:in `create_index!'
+/libraries.io/lib/tasks/search.rake:34:in `block (2 levels) in <main>'
+/usr/local/bundle/gems/rake-13.0.3/exe/rake:27:in `<top (required)>'
+Tasks: TOP => search:recreate_projects_index
+(See full trace by running task with --trace)
+Starting librariesio_redis_1 ... 
+Starting librariesio_elasticsearch_1 ... 
+[2A[2KStarting librariesio_redis_1         ... [32mdone[0m[2B[1A[2KStarting librariesio_elasticsearch_1 ... [32mdone[0m[1B[!!!] Index does not exist (Elasticsearch::Transport::Transport::Errors::NotFound)
+rake aborted!
+Elasticsearch::Transport::Transport::Errors::NotAcceptable: [406] {"error":"Content-Type header [] is not supported","status":406}
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/base.rb:202:in `__raise_transport_error'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/base.rb:313:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/http/faraday.rb:20:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/client.rb:128:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-api-2.0.2/lib/elasticsearch/api/namespace/common.rb:21:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-api-2.0.2/lib/elasticsearch/api/actions/indices/create.rb:84:in `create'
+/usr/local/bundle/gems/elasticsearch-model-5.0.0/lib/elasticsearch/model/indexing.rb:232:in `create_index!'
+/libraries.io/lib/tasks/search.rake:10:in `block (2 levels) in <main>'
+/usr/local/bundle/gems/rake-13.0.3/exe/rake:27:in `<top (required)>'
+Tasks: TOP => search:recreate_repos_index
+(See full trace by running task with --trace)
+Starting librariesio_redis_1 ... 
+[1A[2KStarting librariesio_redis_1 ... [32mdone[0m[1BStarting librariesio_elasticsearch_1 ... 
+[1A[2KStarting librariesio_elasticsearch_1 ... [32mdone[0m[1B[!!!] Index does not exist (Elasticsearch::Transport::Transport::Errors::NotFound)
+rake aborted!
+Elasticsearch::Transport::Transport::Errors::NotAcceptable: [406] {"error":"Content-Type header [] is not supported","status":406}
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/base.rb:202:in `__raise_transport_error'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/base.rb:313:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/transport/http/faraday.rb:20:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-transport-2.0.2/lib/elasticsearch/transport/client.rb:128:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-api-2.0.2/lib/elasticsearch/api/namespace/common.rb:21:in `perform_request'
+/usr/local/bundle/gems/elasticsearch-api-2.0.2/lib/elasticsearch/api/actions/indices/create.rb:84:in `create'
+/usr/local/bundle/gems/elasticsearch-model-5.0.0/lib/elasticsearch/model/indexing.rb:232:in `create_index!'
+/libraries.io/lib/tasks/search.rake:10:in `block (2 levels) in <main>'
+/usr/local/bundle/gems/rake-13.0.3/exe/rake:27:in `<top (required)>'
+Tasks: TOP => search:reindex_everything => search:reindex_repos => search:recreate_repos_index
+(See full trace by running task with --trace)

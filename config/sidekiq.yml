@@ -1,21 +1,21 @@
 ---
 :concurrency: 80
 production:
-  :concurrency: 60
+  :concurrency: 80
 :timeout: 8
 :queues:
-#  - [user, 40]
-  - [critical, 30]
-  - [repo_maintenance_stat_high, 25]
-#  - [mailers, 8]
-  - [tree, 6]
-  - [repo_maintenance_stat, 4]
-  - [default, 4]
-  - [small, 4]
-  - [score, 3]
-  - [status, 2]
+  - [sourcerank, 3]
+  - [user, 1]
+  - [critical, 1]
+  - [repo_maintenance_stat_high, 1]
+    # - [mailers, 8]
+  - [tree, 1]
+  - [repo_maintenance_stat, 1]
+  - [default, 3]
+  - [small, 5]
+  - [score, 2]
+  - [status, 10]
   - [issues, 2]
-  - [owners, 2]
-  - [repo, 2]
-  - [sourcerank, 1]
+  - [owners, 5]
+  - [repo, 1]
   - [repo_maintenance_stat_low, 1]

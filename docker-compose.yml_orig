@@ -17,8 +17,6 @@ services:
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     command: -Daction.auto_create_index=true
-    ports:
-       - "9200:9200"
     mem_limit: 2G
 
   redis:
@@ -59,10 +57,3 @@ services:
     restart: always
     mem_limit: 2G
 
-  libs-api:
-    image: libs-api
-    build:
-      context: ../librariesio-fastapi
-    restart: always
-    ports:
-      - "8000:8000"

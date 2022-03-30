@@ -12,12 +12,25 @@ volumes:
 
 services:
   elasticsearch:
-    image: elasticsearch:2.4.5
-    restart: always
+    image: elasticsearch:6.8.0
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
-    command: -Daction.auto_create_index=true
-    mem_limit: 2G
+    restart: always
+    environment:
+      - cluster.name=es-docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      nproc: 262144
+      nofile:
+        soft: 8192
+        hard: 262144
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    mem_limit: 5G
 
   redis:
     image: redis:3.2.9
