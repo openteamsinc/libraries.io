@@ -20,10 +20,18 @@ module ProjectSearch
         indexes :repository_url, type: 'text'
         indexes :repo_name, type: 'text'
         indexes :latest_release_number, type: 'text', analyzer: 'keyword'
-        indexes :keywords_array, type: 'text', analyzer: 'keyword'
-        indexes :language, type: 'text', analyzer: 'keyword'
-        indexes :normalized_licenses, type: 'text', analyzer: 'keyword'
-        indexes :platform, type: 'text', analyzer: 'keyword'
+        indexes :keywords_array, type: 'text', analyzer: 'keyword' do
+          indexes :raw, type: 'keyword'
+        end
+        indexes :language, type: 'text', analyzer: 'keyword' do
+          indexes :raw, type: 'keyword'
+        end
+        indexes :normalized_licenses, type: 'text', analyzer: 'keyword' do
+          indexes :raw, type: 'keyword'
+        end
+        indexes :platform, type: 'text', analyzer: 'keyword' do
+          indexes :raw, type: 'keyword'
+        end
         indexes :status, type: 'text', analyzer: 'snowball'
 
         indexes :created_at, type: 'date'
@@ -278,7 +286,7 @@ module ProjectSearch
 
     def self.filter_format(filters, except = nil)
       filters.select { |k, v| v.present? && k != except }.map do |k, v|
-        { terms: { "#{k}.keyword" => v.split(',').first } }
+        { terms: { k.to_s => v.split(',').first } }
       end
     end
 
@@ -287,7 +295,7 @@ module ProjectSearch
         aggs: {
           name.to_s => {
             terms: {
-              field: "#{name.to_s}.keyword",
+              field: "#{name}.raw",
               size: limit
             }
           }
