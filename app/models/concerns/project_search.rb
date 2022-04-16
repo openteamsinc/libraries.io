@@ -43,7 +43,7 @@ module ProjectSearch
         indexes :dependents_count, type: 'integer'
         indexes :dependent_repos_count, type: 'integer'
         indexes :contributions_count, type: 'integer'
-        indexes :display_name, type: 'text', analyzer: 'keyword' do
+        indexes :display_name, type: 'text' do
           indexes :raw, type: 'keyword'
         end
         indexes :project_group, type: 'integer'
